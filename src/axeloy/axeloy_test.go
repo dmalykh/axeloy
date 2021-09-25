@@ -100,7 +100,7 @@ func TestAxeloy_Handle(t *testing.T) {
 
 			var routerServiceMock = new(mocks.Router)
 			routerServiceMock.On("GetDestinations", ctx, messageMock).Return(tt.routerServiceGetDestinationsReturn())
-			routerServiceMock.On("ApplyDestinations", ctx, messageMock, mock.Anything).Return(tt.routerServiceApplyDestinationsReturn)
+			routerServiceMock.On("DefineDestinations", ctx, messageMock, mock.Anything).Return(tt.routerServiceApplyDestinationsReturn)
 
 			a := &Axeloy{
 				messageService: messageServiceMock,

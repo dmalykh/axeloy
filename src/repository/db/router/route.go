@@ -7,6 +7,7 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/message"
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/router/model"
+	"github.com/dmalykh/axeloy/axeloy/way"
 	dbmodel "github.com/dmalykh/axeloy/repository/db/router/model"
 	"github.com/google/uuid"
 	"gopkg.in/reform.v1"
@@ -17,7 +18,8 @@ type RouteRepository struct {
 }
 
 var ErrCreateRoute = errors.New(`can't insert route`)
-var ErrCreateProfile = errors.New(`profile couldn't' be saved`)
+var ErrCreateProfile = errors.New(`profile couldn't be saved`)
+var ErrCreateWays = errors.New(`ways couldn't be saved`)
 
 func (r *RouteRepository) Create(ctx context.Context, route *model.Route) error {
 
@@ -37,7 +39,7 @@ func (r *RouteRepository) Create(ctx context.Context, route *model.Route) error 
 	}
 
 	//Save source profiles for route
-	if err := r.createProfile(tx, routeId, dbmodel.Source, route.Source); err != nil {
+	if err := r.createProfile(tx, routeId, dbmodel.Source, route.GetSource()); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf(`%s %w, rollback error %s`, dbmodel.Source, ErrCreateProfile, err.Error())
 		}
@@ -45,11 +47,19 @@ func (r *RouteRepository) Create(ctx context.Context, route *model.Route) error 
 	}
 
 	//Save destination profiles for route
-	if err := r.createProfile(tx, routeId, dbmodel.Destination, route.Source); err != nil {
+	if err := r.createProfile(tx, routeId, dbmodel.Destination, route.GetDestination()); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf(`%s %w, rollback error %s`, dbmodel.Destination, ErrCreateProfile, err.Error())
 		}
 		return fmt.Errorf(`%s %w %s`, dbmodel.Destination, ErrCreateProfile, err.Error())
+	}
+
+	//Save ways
+	if err := r.createWays(tx, routeId, route.GetSenders()); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf(`%w, rollback error %s`, ErrCreateWays, err.Error())
+		}
+		return fmt.Errorf(`%w %s`, ErrCreateWays, err.Error())
 	}
 
 	return tx.Commit()
@@ -75,6 +85,17 @@ func (r *RouteRepository) createProfile(tx *reform.TX, routeId uuid.UUID, kind d
 		}
 	}
 	return tx.InsertMulti(profiles...)
+}
+
+func (r *RouteRepository) createWays(tx *reform.TX, routeId uuid.UUID, senders []way.Sender) error {
+	var ways = make([]reform.Struct, len(senders))
+	for i, w := range senders {
+		ways[i] = &dbmodel.Way{
+			RouteId: routeId,
+			WayId:   w.GetId(),
+		}
+	}
+	return tx.InsertMulti(ways...)
 }
 
 func (r *RouteRepository) GetBySource(ctx context.Context, source message.Payload) ([]*model.Route, error) {

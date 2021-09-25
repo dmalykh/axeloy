@@ -22,6 +22,8 @@ type Axeloy struct {
 	messageService message.Messager
 	waysService    way.Wayer
 	log            Logger
+	senderChan     chan router.Track
+	ctx            context.Context
 }
 
 type Config struct {
@@ -29,8 +31,9 @@ type Config struct {
 }
 
 // Run Axeloy.
-// Starts listening ways.
 func (a *Axeloy) Run(ctx context.Context, config *Config) error {
+	a.senderChan = make(chan router.Track)
+	// Start listen ways.
 	for _, w := range a.GetWaysListeners(ctx) {
 		go func(way way.Listener) {
 			err := way.Listen(ctx, a.Handle)
@@ -40,6 +43,19 @@ func (a *Axeloy) Run(ctx context.Context, config *Config) error {
 		}(w)
 	}
 	return nil
+}
+
+func (a *Axeloy) GetContext() context.Context {
+	return a.ctx
+}
+
+func (a *Axeloy) runSender() {
+	for track := range a.senderChan {
+		//track.GetSender().ValidateProfile(track.GetProfile())
+		if err := a.routerService.Send(a.GetContext(), track); err != nil {
+
+		}
+	}
 }
 
 // Subscribe profile. If a message will be received from a source, it should be sent to a destination by a ways.
@@ -58,20 +74,6 @@ func (a *Axeloy) GetWaysListeners(ctx context.Context) []way.Listener {
 	return listeners
 }
 
-// The ApplyDestinations method fetch destinations for message and save relation between message and route
-func (a *Axeloy) ApplyDestinations(ctx context.Context, m message.Message) ([]router.Destination, error) {
-	//Get destinations for message
-	destinations, err := a.routerService.GetDestinations(ctx, m)
-	if err != nil {
-		return nil, fmt.Errorf(`%w %s`, ErrFetchDestinations, err.Error())
-	}
-	//Add destinations for the messages history
-	if err := a.routerService.ApplyDestinations(ctx, m, destinations); err != nil {
-		return nil, fmt.Errorf(`%w %s`, ErrSaveDestinations, err.Error())
-	}
-	return nil, err
-}
-
 // The Handle function receives message and saves it
 func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	//Save message
@@ -80,48 +82,43 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	}
 
 	//Get destinations for message
-	destinations, err := a.ApplyDestinations(ctx, m)
+	destinations, err := a.routerService.GetDestinations(ctx, m)
 	if err != nil {
 		if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
 			return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
 		}
-		return err
+		return fmt.Errorf(`%w %s`, ErrSaveDestinations, err.Error())
 	}
 
-	//Range destinations and send messages
+	//Return error when destinations absent
 	if len(destinations) == 0 {
+		if err := a.messageService.SaveState(ctx, m, message.NoDestinations); err != nil {
+			return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
+		}
 		return ErrNoDestinations
 	}
+
+	//Define tracks for message and send them to sender channel
 	for _, destination := range destinations {
-		//@TODO ОБРАБОТКА ДУБЛЕЙ! Может быть найдено два одинаковых маршрута для одного сообщения
 		go func(ctx context.Context, m message.Message, destination router.Destination) {
-			for _, w := range destination.GetWays(ctx) {
-				err := w.ValidateProfile(ctx, destination.GetProfile(ctx))
-				if err != nil {
-					if err := a.messageService.SaveState(ctx, m, message.NotValidProfile, err.Error()); err != nil { //@TODO: Add info about profile
-						//@todo
-					}
+			//Define tracks from destinations for the messages history
+			tracks, err := a.routerService.DefineTracks(ctx, m, destination)
+			if err != nil {
+				if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
+					//@TODO log fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
+					return
 				}
-				if err := a.Send(ctx, m, destination, w); err != nil {
-					//@todo
-				}
+				return
+			}
+			//Send messages by  tracks
+			for _, track := range tracks {
+				a.senderChan <- track
 			}
 		}(ctx, m, destination)
 	}
+	//Mark message as processed
+	if err := a.messageService.SaveState(ctx, m, message.Processed); err != nil {
+		return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
+	}
 	return nil
-}
-
-func (a *Axeloy) Send(ctx context.Context, m message.Message, desination router.Destination, w way.Sender) error {
-	state, err := w.Send(ctx, desination.GetProfile(ctx), m)
-	// Save error
-	if err != nil {
-		if err := a.messageService.SaveState(ctx, m, state, err.Error()); err != nil { //@TODO: Human readable error
-			//@TODO err
-		}
-	}
-	if err := a.messageService.SaveState(ctx, m, message.Sent); err != nil {
-		//@TODO err
-	}
-	return err
-
 }

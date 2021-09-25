@@ -10,6 +10,7 @@ type State string
 
 const (
 	New             State = "new"
+	Processed       State = "processed"
 	NotValidProfile State = "not_valid_profile"
 	Sent            State = "sent"
 	Error           State = "error"

@@ -24,3 +24,6 @@ func (r *Route) GetSenders() []way.Sender {
 func (r Route) GetDestination() profile.Profile {
 	return r.Destination
 }
+func (r Route) GetSource() profile.Profile {
+	return r.Source
+}

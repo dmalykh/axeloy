@@ -14,11 +14,11 @@ import (
 
 var ErrUnknownSender = errors.New(`unknown sender`)
 var ErrGettingDestinationError = errors.New(`getting destination with error`)
+var ErrNotValidProfile = errors.New(`profile is not valid`)
 
 type RouteService struct {
 	routeRepository repository.RouteRepository
 	wayService      way.Wayer
-	messafeService  message.Messager
 }
 
 func NewService() *RouteService {
@@ -30,11 +30,6 @@ func (r *RouteService) MakeDestination(p profile.Profile, ways ...way.Sender) De
 		Ways:    ways,
 		Profile: p,
 	}
-}
-
-//
-func (r *RouteService) ApplyDestinations(ctx context.Context, m message.Message, destinations []Destination) error {
-
 }
 
 func (r *RouteService) GetDestinations(ctx context.Context, m message.Message) ([]Destination, error) {
@@ -87,7 +82,7 @@ func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, d
 	//@TODO: Check for exists route
 	for _, s := range senders {
 		if err := s.ValidateProfile(ctx, destination); err != nil {
-			return err //@TODO
+			return fmt.Errorf(`%w %s`, ErrNotValidProfile, err.Error())
 		}
 	}
 	return r.routeRepository.Create(ctx, &model.Route{
@@ -95,4 +90,16 @@ func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, d
 		Destination: destination,
 		Senders:     senders,
 	})
+}
+
+func (r *RouteService) DefineTracks(ctx context.Context, m message.Message, destinations Destination) ([]Track, error) {
+	panic("implement me")
+}
+
+func (r *RouteService) GetTracks(ctx context.Context, m message.Messager) ([]Track, error) {
+	panic("implement me")
+}
+
+func (r *RouteService) Send(ctx context.Context, track Track) error {
+	panic("implement me")
 }
