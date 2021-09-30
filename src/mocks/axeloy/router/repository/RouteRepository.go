@@ -17,7 +17,7 @@ type RouteRepository struct {
 }
 
 // Create provides a mock function with given fields: ctx, route
-func (_m *RouteRepository) Create(ctx context.Context, route *model.Route) error {
+func (_m *RouteRepository) CreateRoute(ctx context.Context, route *model.Route) error {
 	ret := _m.Called(ctx, route)
 
 	var r0 error

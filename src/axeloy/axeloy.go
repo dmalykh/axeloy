@@ -7,22 +7,24 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/message"
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/router"
+	"github.com/dmalykh/axeloy/axeloy/router/model"
 	"github.com/dmalykh/axeloy/axeloy/way"
 )
 
 var ErrSaveMessage = errors.New(`saving message error`)
 var ErrNoDestinations = errors.New(`not found destinations for message`)
 var ErrFetchDestinations = errors.New(`error finding destinations for message`)
-var ErrSaveDestinations = errors.New(`error save destinations for message`)
 var ErrInternalError = errors.New(`internal error`)
 var ErrSubscription = errors.New(`can't subscribe`)
+var ErrDefineTracks = errors.New(`can't define tracks from destinations`)
+var ErrSend = errors.New(`can't send`)
 
 type Axeloy struct {
 	routerService  router.Router
 	messageService message.Messager
 	waysService    way.Wayer
 	log            Logger
-	senderChan     chan router.Track
+	senderChan     chan *model.Track
 	ctx            context.Context
 }
 
@@ -32,7 +34,7 @@ type Config struct {
 
 // Run Axeloy.
 func (a *Axeloy) Run(ctx context.Context, config *Config) error {
-	a.senderChan = make(chan router.Track)
+	a.senderChan = make(chan *model.Track)
 	// Start listen ways.
 	for _, w := range a.GetWaysListeners(ctx) {
 		go func(way way.Listener) {
@@ -85,9 +87,9 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	destinations, err := a.routerService.GetDestinations(ctx, m)
 	if err != nil {
 		if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
-			return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
+			return fmt.Errorf(`%w: %s`, ErrInternalError, err.Error())
 		}
-		return fmt.Errorf(`%w %s`, ErrSaveDestinations, err.Error())
+		return fmt.Errorf(`%w %s`, ErrFetchDestinations, err.Error())
 	}
 
 	//Return error when destinations absent
@@ -99,26 +101,35 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	}
 
 	//Define tracks for message and send them to sender channel
-	for _, destination := range destinations {
-		go func(ctx context.Context, m message.Message, destination router.Destination) {
-			//Define tracks from destinations for the messages history
-			tracks, err := a.routerService.DefineTracks(ctx, m, destination)
-			if err != nil {
-				if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
-					//@TODO log fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
-					return
-				}
-				return
-			}
-			//Send messages by  tracks
-			for _, track := range tracks {
-				a.senderChan <- track
-			}
-		}(ctx, m, destination)
+	tracks, err := a.defineTracks(ctx, m, destinations...)
+	if err != nil {
+		if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
+			return fmt.Errorf(`%w: %s`, ErrInternalError, err.Error())
+		}
+		return fmt.Errorf(`%w %s`, ErrDefineTracks, err.Error())
 	}
+
+	//Send messages by  tracks
+	for _, track := range tracks {
+		a.senderChan <- track
+	}
+
 	//Mark message as processed
 	if err := a.messageService.SaveState(ctx, m, message.Processed); err != nil {
 		return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
 	}
 	return nil
+}
+
+func (a *Axeloy) defineTracks(ctx context.Context, m message.Message, destinations ...router.Destination) ([]*model.Track, error) {
+	var tracks = make([]*model.Track, 0)
+	for _, destination := range destinations {
+		//Define tracks from destinations for the messages history
+		t, err := a.routerService.DefineTracks(ctx, m, destination)
+		if err != nil {
+			return nil, err
+		}
+		tracks = append(tracks, t...)
+	}
+	return tracks, nil
 }

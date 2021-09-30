@@ -17,11 +17,12 @@ type RouteRepository struct {
 	db *reform.DB
 }
 
+
 var ErrCreateRoute = errors.New(`can't insert route`)
 var ErrCreateProfile = errors.New(`profile couldn't be saved`)
 var ErrCreateWays = errors.New(`ways couldn't be saved`)
 
-func (r *RouteRepository) Create(ctx context.Context, route *model.Route) error {
+func (r *RouteRepository) CreateRoute(ctx context.Context, route *model.Route) error {
 
 	var routeId = uuid.New() //@TODO: возможно, стоит генерировать выше
 
@@ -30,7 +31,7 @@ func (r *RouteRepository) Create(ctx context.Context, route *model.Route) error 
 		return err //@TODO
 	}
 
-	//Create route @TODO: а нужна ли вообще эта таблица из одной колонки?
+	//CreateRoute route @TODO: а нужна ли вообще эта таблица из одной колонки?
 	if err := r.createRoute(tx, routeId); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf(`%w %s, rollback error %s`, ErrCreateRoute, routeId.String(), err.Error())
@@ -99,5 +100,19 @@ func (r *RouteRepository) createWays(tx *reform.TX, routeId uuid.UUID, senders [
 }
 
 func (r *RouteRepository) GetBySource(ctx context.Context, source message.Payload) ([]*model.Route, error) {
+	source.GetProfile().
+	var query = fmt.Sprintf(`SELECT route_profile.id FROM route_profile WHERE route_profile.`)
+	r.db.WithContext(ctx).WithTag()
+}
+
+func (r *RouteRepository) CreateTrack(ctx context.Context, tracks ...*model.Track) error {
+	for _, track := range tracks {
+		dbmodel.Track{
+			WayId: track.GetSender().GetId(),
+		}
+	}
+}
+
+func (r *RouteRepository) GetTracks(ctx context.Context, m message.Message) ([]*model.Track, error) {
 	panic("implement me")
 }

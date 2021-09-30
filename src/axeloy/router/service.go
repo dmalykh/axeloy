@@ -80,26 +80,45 @@ func (r *RouteService) GetDestinationsForDirectMessage(ctx context.Context, payl
 
 func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, destination profile.Profile, senders ...way.Sender) error {
 	//@TODO: Check for exists route
-	for _, s := range senders {
-		if err := s.ValidateProfile(ctx, destination); err != nil {
-			return fmt.Errorf(`%w %s`, ErrNotValidProfile, err.Error())
-		}
-	}
-	return r.routeRepository.Create(ctx, &model.Route{
+	//for _, s := range senders {
+	//	if err := s.ValidateProfile(ctx, destination); err != nil {
+	//		return fmt.Errorf(`%w %s`, ErrNotValidProfile, err.Error())
+	//	}
+	//}
+	return r.routeRepository.CreateRoute(ctx, &model.Route{
 		Source:      source,
 		Destination: destination,
 		Senders:     senders,
 	})
 }
 
-func (r *RouteService) DefineTracks(ctx context.Context, m message.Message, destinations Destination) ([]Track, error) {
-	panic("implement me")
+var ErrCreateTrack = errors.New(`can't create track`)
+var ErrGetTrack = errors.New(`couldn't got track`)
+
+func (r *RouteService) DefineTracks(ctx context.Context, m message.Message, destination Destination) ([]*model.Track, error) {
+	var tracks = make([]*model.Track, 0)
+	for _, w := range destination.GetWays(ctx) {
+		tracks = append(tracks, &model.Track{
+			Sender:  w,
+			Message: m,
+			Profile: destination.GetProfile(ctx),
+			Status:  model.New,
+		})
+	}
+	if err := r.routeRepository.CreateTrack(ctx, tracks...); err != nil {
+		return nil, fmt.Errorf(`%w %s`, ErrCreateTrack, err.Error())
+	}
+	return tracks, nil
 }
 
-func (r *RouteService) GetTracks(ctx context.Context, m message.Messager) ([]Track, error) {
-	panic("implement me")
+func (r *RouteService) GetTracks(ctx context.Context, m message.Message) ([]*model.Track, error) {
+	tracks, err := r.routeRepository.GetTracks(ctx, m)
+	if err != nil {
+		return nil, fmt.Errorf(`%w %s`, ErrGetTrack, err.Error())
+	}
+	return tracks, nil
 }
 
-func (r *RouteService) Send(ctx context.Context, track Track) error {
-	panic("implement me")
+func (r *RouteService) Send(ctx context.Context, track *model.Track) error {
+	track.GetSender()
 }

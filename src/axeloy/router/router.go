@@ -10,9 +10,6 @@ import (
 type Router interface {
 	// The GetDestinations method returns destinations for message
 	GetDestinations(ctx context.Context, m message.Message) ([]Destination, error)
-	//
-	//// The CreateDestination method create destination
-	//CreateDestination(ctx context.Context, p profile.Profile, ways ...way.Sender) (Payload, error)
 
 	// The ApplyRoute method adds new route for messages received from source profile for sending them for destination profile by ways.
 	// If a route exists, the method does nothing or updates ways list if it is necessary.
@@ -22,7 +19,7 @@ type Router interface {
 	DefineTracks(ctx context.Context, m message.Message, destinations Destination) ([]Track, error)
 
 	// The GetTracks method returns tracks for message
-	GetTracks(ctx context.Context, m message.Messager) ([]Track, error)
+	//GetTracks(ctx context.Context, m message.Message) ([]Track, error)
 
 	// The Send method sending messages from track by the track
 	Send(ctx context.Context, track Track) error

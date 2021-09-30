@@ -10,7 +10,7 @@ import (
 
 type Way interface {
 	core.Identitable
-	ValidateProfile(ctx context.Context, profile profile.Profile) error
+	//ValidateProfile(ctx context.Context, profile profile.Profile) error
 	SetParams(params model.Params)
 	//GetRequiredFields() []string
 }
