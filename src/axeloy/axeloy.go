@@ -7,8 +7,8 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/message"
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/router"
-	"github.com/dmalykh/axeloy/axeloy/router/model"
 	"github.com/dmalykh/axeloy/axeloy/way"
+	"github.com/google/uuid"
 )
 
 var ErrSaveMessage = errors.New(`saving message error`)
@@ -21,10 +21,11 @@ var ErrSend = errors.New(`can't send`)
 
 type Axeloy struct {
 	routerService  router.Router
+	trackService   router.Tracker
 	messageService message.Messager
 	waysService    way.Wayer
 	log            Logger
-	senderChan     chan *model.Track
+	senderChan     chan router.Track
 	ctx            context.Context
 }
 
@@ -32,32 +33,53 @@ type Config struct {
 	router router.Router
 }
 
+var ErrReceiveUnsent = errors.New(`can't receive unsent`)
+var ErrReceiveListeners = errors.New(`can't receive listeners`)
+
 // Run Axeloy.
 func (a *Axeloy) Run(ctx context.Context, config *Config) error {
-	a.senderChan = make(chan *model.Track)
+	a.senderChan = make(chan router.Track)
+	a.runSender(ctx, a.senderChan)
+	if err := a.sendUnsent(ctx); err != nil {
+		return fmt.Errorf(`%w: %s`, ErrReceiveUnsent, err.Error())
+	}
 	// Start listen ways.
-	for _, w := range a.GetWaysListeners(ctx) {
+	ways, err := a.GetWaysListeners(ctx)
+	if err != nil {
+		return fmt.Errorf(`%w: %s`, ErrReceiveListeners, err.Error())
+	}
+
+	for _, w := range ways {
 		go func(way way.Listener) {
-			err := way.Listen(ctx, a.Handle)
+			//var listeners = map[uuid.UUID]chan message.Message
+			//listeners[way.GetId()] =
+			err := way.Listen(ctx, a.Handle) //@TODO how to stop/start manually?
 			if err != nil {
-				//@TODO restart channel, log  restart. Стоппинг каналов
+				//@TODO restart channel, log  restart.
+				way.Stop()
 			}
 		}(w)
 	}
 	return nil
 }
 
-func (a *Axeloy) GetContext() context.Context {
-	return a.ctx
+func (a *Axeloy) sendUnsent(ctx context.Context) error {
+	tracks, err := a.trackService.GetUnsentTracks(ctx)
+	if err != nil {
+
+	}
+	go a.send(tracks...)
 }
 
-func (a *Axeloy) runSender() {
-	for track := range a.senderChan {
-		//track.GetSender().ValidateProfile(track.GetProfile())
-		if err := a.routerService.Send(a.GetContext(), track); err != nil {
-
+func (a *Axeloy) runSender(ctx context.Context, sender chan router.Track) {
+	go func(ctx context.Context, sender chan router.Track) {
+		for track := range sender {
+			//track.GetSender().ValidateProfile(track.GetProfile())
+			if err := a.trackService.Send(ctx, track); err != nil {
+				//@TODO
+			}
 		}
-	}
+	}(ctx, sender)
 }
 
 // Subscribe profile. If a message will be received from a source, it should be sent to a destination by a ways.
@@ -68,12 +90,13 @@ func (a *Axeloy) Subscribe(ctx context.Context, source profile.Profile, destinat
 	return nil
 }
 
-func (a *Axeloy) GetWaysListeners(ctx context.Context) []way.Listener {
+//The GetWaysListeners returns way for listen
+func (a *Axeloy) GetWaysListeners(ctx context.Context) ([]way.Listener, error) {
 	listeners, err := a.waysService.GetAvailableListeners(ctx)
 	if err != nil {
-		//@TODO
+		return nil, err
 	}
-	return listeners
+	return listeners, nil
 }
 
 // The Handle function receives message and saves it
@@ -101,17 +124,12 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	}
 
 	//Define tracks for message and send them to sender channel
-	tracks, err := a.defineTracks(ctx, m, destinations...)
+	err = a.Send(ctx, m, destinations...)
 	if err != nil {
 		if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
 			return fmt.Errorf(`%w: %s`, ErrInternalError, err.Error())
 		}
 		return fmt.Errorf(`%w %s`, ErrDefineTracks, err.Error())
-	}
-
-	//Send messages by  tracks
-	for _, track := range tracks {
-		a.senderChan <- track
 	}
 
 	//Mark message as processed
@@ -121,15 +139,22 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	return nil
 }
 
-func (a *Axeloy) defineTracks(ctx context.Context, m message.Message, destinations ...router.Destination) ([]*model.Track, error) {
-	var tracks = make([]*model.Track, 0)
+//Send message by destinations. Define tracks for messages destinations and sent them.
+func (a *Axeloy) Send(ctx context.Context, m message.Message, destinations ...router.Destination) error {
 	for _, destination := range destinations {
 		//Define tracks from destinations for the messages history
-		t, err := a.routerService.DefineTracks(ctx, m, destination)
+		tracks, err := a.trackService.DefineTracks(ctx, m, destination)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		tracks = append(tracks, t...)
+		a.send(tracks...)
 	}
-	return tracks, nil
+	return nil
+}
+
+// The send method sends message related with track by track
+func (a *Axeloy) send(tracks ...router.Track) {
+	for _, track := range tracks {
+		a.senderChan <- track
+	}
 }

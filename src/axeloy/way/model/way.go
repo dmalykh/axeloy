@@ -9,7 +9,7 @@ type WayType string
 const Listener WayType = "listener"
 const Sender WayType = "sender"
 
-type Params map[string]interface{}
+type Params map[string]string
 
 type Way struct {
 	Id         uuid.UUID

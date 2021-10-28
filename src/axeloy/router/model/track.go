@@ -1,42 +1,49 @@
 package model
 
 import (
-	"github.com/dmalykh/axeloy/axeloy/message"
 	"github.com/dmalykh/axeloy/axeloy/profile"
-	"github.com/dmalykh/axeloy/axeloy/way"
 	"github.com/google/uuid"
 )
 
 type TrackStatus string
 
 const (
-	New TrackStatus = `new`
+	Planned TrackStatus = `planned`
+	Process TrackStatus = `process`
+	Error   TrackStatus = `error`
+	Done    TrackStatus = `done`
 )
 
 type Track struct {
-	Id      uuid.UUID
-	Sender  way.Sender
-	Message message.Message
-	Profile profile.Profile
-	Status  TrackStatus
+	Id        uuid.UUID
+	SenderId  uuid.UUID
+	MessageId uuid.UUID
+	Profile   profile.Profile
+	Attempts  int
+	Info      string
+	Status    TrackStatus
 }
 
 func (t *Track) GetId() uuid.UUID {
-	panic("implement me")
+	return t.Id
 }
 
-func (t *Track) GetSender() way.Sender {
-	panic("implement me")
+func (t *Track) GetSenderId() uuid.UUID {
+	return t.SenderId
 }
 
-func (t *Track) GetMessage() message.Message {
-	panic("implement me")
+func (t *Track) GetMessageId() uuid.UUID {
+	return t.MessageId
 }
 
 func (t *Track) GetProfile() profile.Profile {
-	panic("implement me")
+	return t.Profile
+}
+
+func (t *Track) GetAttempts() int {
+	return t.Attempts
 }
 
 func (t *Track) GetStatus() TrackStatus {
-	panic("implement me")
+	return t.Status
 }

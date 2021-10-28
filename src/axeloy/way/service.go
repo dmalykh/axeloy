@@ -14,14 +14,17 @@ type WayService struct {
 	drivers       drivers
 }
 
+var ErrNoWayName = errors.New(`name of way doesn't exists`)
+var ErrNoWayDriver = errors.New(`driver doesn't exists`)
+
 func (w *WayService) GetSenderByName(ctx context.Context, name string) (Sender, error) {
 	way, err := w.wayRepository.GetByName(ctx, name)
 	if err != nil {
-		return nil, err //@TODO
+		return nil, fmt.Errorf(`%s %w`, name, ErrNoWayName)
 	}
 	sender, err := w.drivers.GetSender(way.GetDriverName())
 	if err != nil {
-		return nil, err //@TODO
+		return nil, fmt.Errorf(`%s %w`, way.GetDriverName(), ErrNoWayDriver)
 	}
 	return sender, nil
 }

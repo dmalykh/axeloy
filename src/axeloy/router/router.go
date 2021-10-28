@@ -14,13 +14,4 @@ type Router interface {
 	// The ApplyRoute method adds new route for messages received from source profile for sending them for destination profile by ways.
 	// If a route exists, the method does nothing or updates ways list if it is necessary.
 	ApplyRoute(ctx context.Context, source profile.Profile, destination profile.Profile, senders ...way.Sender) error
-
-	// The DefineTracks method unfolds destination to tracks and saves relation between message and track
-	DefineTracks(ctx context.Context, m message.Message, destinations Destination) ([]Track, error)
-
-	// The GetTracks method returns tracks for message
-	//GetTracks(ctx context.Context, m message.Message) ([]Track, error)
-
-	// The Send method sending messages from track by the track
-	Send(ctx context.Context, track Track) error
 }

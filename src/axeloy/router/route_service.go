@@ -10,19 +10,20 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/router/model"
 	"github.com/dmalykh/axeloy/axeloy/router/repository"
 	"github.com/dmalykh/axeloy/axeloy/way"
+	"github.com/google/uuid"
 )
 
-var ErrUnknownSender = errors.New(`unknown sender`)
-var ErrGettingDestinationError = errors.New(`getting destination with error`)
-var ErrNotValidProfile = errors.New(`profile is not valid`)
+var (
+	ErrUnknownSender           = errors.New(`unknown sender`)
+	ErrGettingDestinationError = errors.New(`getting destination with error`)
+	ErrNotValidProfile         = errors.New(`profile is not valid`)
+	ErrCreateTrack             = errors.New(`can't create track`)
+	ErrGetTrack                = errors.New(`couldn't got track`)
+)
 
 type RouteService struct {
 	routeRepository repository.RouteRepository
 	wayService      way.Wayer
-}
-
-func NewService() *RouteService {
-	return &RouteService{}
 }
 
 func (r *RouteService) MakeDestination(p profile.Profile, ways ...way.Sender) Destination {
@@ -43,7 +44,7 @@ func (r *RouteService) GetDestinations(ctx context.Context, m message.Message) (
 
 //
 func (r *RouteService) GetDestinationsByRoute(ctx context.Context, payload message.Payload) ([]Destination, error) {
-	routes, err := r.routeRepository.GetBySource(ctx, payload)
+	routes, err := r.routeRepository.GetBySourceProfile(ctx, payload.GetProfile())
 	if err != nil {
 		if errors.Is(err, core.ErrRepositoryFetchError) {
 			return nil, fmt.Errorf(`%w: %s`, ErrGettingDestinationError, err.Error())
@@ -54,7 +55,23 @@ func (r *RouteService) GetDestinationsByRoute(ctx context.Context, payload messa
 	var destinations = func(routes []*model.Route) []Destination {
 		var destinations = make([]Destination, 0)
 		for _, route := range routes {
-			destinations = append(destinations, r.MakeDestination(route.GetDestination(), route.GetSenders()...))
+			// Get only available senders @TODO: Is it possible to get thousands senders?
+			var senders = func(wayIds []uuid.UUID) []way.Sender {
+				var s = make([]way.Sender, 0)
+				for _, wayId := range wayIds {
+					sender, err := r.wayService.GetSenderById(ctx, wayId)
+					if err != nil {
+						continue //@TODO log it
+					}
+					if _, err := sender.ValidateProfile(ctx, route.GetDestination()); err != nil {
+						continue //@TODO log error
+					}
+					s = append(s, sender)
+				}
+				return s
+			}(route.GetWaysIds())
+			//Add to destinations
+			destinations = append(destinations, r.MakeDestination(route.GetDestination(), senders...))
 		}
 		return destinations
 	}(routes)
@@ -79,7 +96,7 @@ func (r *RouteService) GetDestinationsForDirectMessage(ctx context.Context, payl
 }
 
 func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, destination profile.Profile, senders ...way.Sender) error {
-	//@TODO: Check for exists route
+	//@TODO: Check for exists route and validate ways with profile
 	//for _, s := range senders {
 	//	if err := s.ValidateProfile(ctx, destination); err != nil {
 	//		return fmt.Errorf(`%w %s`, ErrNotValidProfile, err.Error())
@@ -88,37 +105,12 @@ func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, d
 	return r.routeRepository.CreateRoute(ctx, &model.Route{
 		Source:      source,
 		Destination: destination,
-		Senders:     senders,
+		WaysIds: func(senders []way.Sender) []uuid.UUID {
+			var ids = make([]uuid.UUID, len(senders))
+			for i, sender := range senders {
+				ids[i] = sender.GetId()
+			}
+			return ids
+		}(senders),
 	})
-}
-
-var ErrCreateTrack = errors.New(`can't create track`)
-var ErrGetTrack = errors.New(`couldn't got track`)
-
-func (r *RouteService) DefineTracks(ctx context.Context, m message.Message, destination Destination) ([]*model.Track, error) {
-	var tracks = make([]*model.Track, 0)
-	for _, w := range destination.GetWays(ctx) {
-		tracks = append(tracks, &model.Track{
-			Sender:  w,
-			Message: m,
-			Profile: destination.GetProfile(ctx),
-			Status:  model.New,
-		})
-	}
-	if err := r.routeRepository.CreateTrack(ctx, tracks...); err != nil {
-		return nil, fmt.Errorf(`%w %s`, ErrCreateTrack, err.Error())
-	}
-	return tracks, nil
-}
-
-func (r *RouteService) GetTracks(ctx context.Context, m message.Message) ([]*model.Track, error) {
-	tracks, err := r.routeRepository.GetTracks(ctx, m)
-	if err != nil {
-		return nil, fmt.Errorf(`%w %s`, ErrGetTrack, err.Error())
-	}
-	return tracks, nil
-}
-
-func (r *RouteService) Send(ctx context.Context, track *model.Track) error {
-	track.GetSender()
 }

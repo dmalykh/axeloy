@@ -24,9 +24,9 @@ type Message interface {
 }
 
 type Messager interface {
+	GetById(ctx context.Context, id uuid.UUID) (Message, error)
 	Save(ctx context.Context, m Message) error
 	SaveState(ctx context.Context, m Message, state State, info ...string) error
-	//SaveDestinations(ctx context.Context, destinations []router.Destination) error
 }
 
 type Payload interface {
