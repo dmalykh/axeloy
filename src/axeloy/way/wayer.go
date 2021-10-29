@@ -30,5 +30,16 @@ type Listener interface {
 type Wayer interface {
 	GetAvailableListeners(ctx context.Context) ([]Listener, error)
 	GetSenderByName(ctx context.Context, name string) (Sender, error)
-	GetSenderById(ctx context.Context, uuid uuid.UUID) (Sender, error)
+	GetSenderById(ctx context.Context, id uuid.UUID) (Sender, error)
+
+	//The RunListeners starts listen all available listeners.
+	RunListeners(ctx context.Context, handler func(ctx context.Context, message message.Message) error) error
+
+	//The RunListener method starts listen listener. If error happens, restarts listening.
+	RunListener(ctx context.Context, listener Listener, handler func(ctx context.Context, message message.Message) error) error
+
+	StopListener(ctx context.Context, listener Listener) error
+
+	// Stop all listeners and senders
+	Stop() error
 }

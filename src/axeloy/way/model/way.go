@@ -14,6 +14,7 @@ type Params map[string]string
 type Way struct {
 	Id         uuid.UUID
 	Name       string
+	Title      string
 	Type       WayType
 	DriverName string
 	Params     Params
@@ -37,4 +38,8 @@ func (w *Way) GetParams() Params {
 
 func (w *Way) GetName() string {
 	return w.Name
+}
+
+func (w *Way) GetTitle() string {
+	return w.Title
 }

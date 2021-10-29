@@ -21,6 +21,13 @@ var (
 	ErrGetTrack                = errors.New(`couldn't got track`)
 )
 
+func NewRouter(routeRepository repository.RouteRepository, wayer way.Wayer) *RouteService {
+	return &RouteService{
+		routeRepository: routeRepository,
+		wayService:      wayer,
+	}
+}
+
 type RouteService struct {
 	routeRepository repository.RouteRepository
 	wayService      way.Wayer

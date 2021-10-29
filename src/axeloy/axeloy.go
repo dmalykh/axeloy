@@ -10,54 +10,46 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/way"
 )
 
-var ErrSaveMessage = errors.New(`saving message error`)
-var ErrNoDestinations = errors.New(`not found destinations for message`)
-var ErrFetchDestinations = errors.New(`error finding destinations for message`)
-var ErrInternalError = errors.New(`internal error`)
-var ErrSubscription = errors.New(`can't subscribe`)
-var ErrDefineTracks = errors.New(`can't define tracks from destinations`)
-var ErrSend = errors.New(`can't send`)
+var (
+	ErrSaveMessage       = errors.New(`saving message error`)
+	ErrNoDestinations    = errors.New(`not found destinations for message`)
+	ErrFetchDestinations = errors.New(`error finding destinations for message`)
+	ErrInternalError     = errors.New(`internal error`)
+	ErrSubscription      = errors.New(`can't subscribe`)
+	ErrDefineTracks      = errors.New(`can't define tracks from destinations`)
+	ErrRunListeners      = errors.New(`can't run listener`)
+	ErrReceiveUnsent     = errors.New(`can't receive unsent`)
+)
 
 type Axeloy struct {
 	routerService  router.Router
 	trackService   router.Tracker
 	messageService message.Messager
 	waysService    way.Wayer
-	log            Logger
-	senderChan     chan router.Track
-	ctx            context.Context
+
+	senderChan chan router.Track
 }
 
 type Config struct {
-	router router.Router
+	Router router.Router
 }
 
-var ErrReceiveUnsent = errors.New(`can't receive unsent`)
-var ErrReceiveListeners = errors.New(`can't receive listeners`)
+func New(config *Config) *Axeloy {
+	return &Axeloy{
+		routerService:
+	}
+}
 
 // Run Axeloy.
-func (a *Axeloy) Run(ctx context.Context, config *Config) error {
+func (a *Axeloy) Run(ctx context.Context) error {
 	a.senderChan = make(chan router.Track)
 	a.runSender(ctx, a.senderChan)
 	if err := a.sendUnsent(ctx); err != nil {
 		return fmt.Errorf(`%w: %s`, ErrReceiveUnsent, err.Error())
 	}
-	// Start listen ways.
-	ways, err := a.GetWaysListeners(ctx)
-	if err != nil {
-		return fmt.Errorf(`%w: %s`, ErrReceiveListeners, err.Error())
-	}
-
-	for _, w := range ways {
-		go func(way way.Listener) {
-			//var listeners = map[uuid.UUID]chan message.Message
-			//listeners[way.GetId()] =
-			err := way.Listen(ctx, a.Handle) //@TODO how to stop/start manually?
-			if err != nil {
-				//@TODO restart channel, log  restart.
-				way.Stop()
-			}
-		}(w)
+	// Start listeners
+	if err := a.waysService.RunListeners(ctx, a.Handle); err != nil {
+		return fmt.Errorf(`%w: %s`, ErrRunListeners, err.Error())
 	}
 	return nil
 }
@@ -74,20 +66,11 @@ func (a *Axeloy) sendUnsent(ctx context.Context) error {
 func (a *Axeloy) runSender(ctx context.Context, sender chan router.Track) {
 	go func(ctx context.Context, sender chan router.Track) {
 		for track := range sender {
-			//track.GetSender().ValidateProfile(track.GetProfile())
 			if err := a.trackService.Send(ctx, track); err != nil {
 				//@TODO
 			}
 		}
 	}(ctx, sender)
-}
-
-// Subscribe profile. If a message will be received from a source, it should be sent to a destination by a ways.
-func (a *Axeloy) Subscribe(ctx context.Context, source profile.Profile, destination profile.Profile, senders ...way.Sender) error {
-	if err := a.routerService.ApplyRoute(ctx, source, destination, senders...); err != nil {
-		return fmt.Errorf(`%w:%s`, ErrSubscription, err.Error())
-	}
-	return nil
 }
 
 //The GetWaysListeners returns way for listen
@@ -97,6 +80,14 @@ func (a *Axeloy) GetWaysListeners(ctx context.Context) ([]way.Listener, error) {
 		return nil, err
 	}
 	return listeners, nil
+}
+
+// Subscribe profile. If a message will be received from a source, it should be sent to a destination by a ways.
+func (a *Axeloy) Subscribe(ctx context.Context, source profile.Profile, destination profile.Profile, senders ...way.Sender) error {
+	if err := a.routerService.ApplyRoute(ctx, source, destination, senders...); err != nil {
+		return fmt.Errorf(`%w:%s`, ErrSubscription, err.Error())
+	}
+	return nil
 }
 
 // The Handle function receives message and saves it

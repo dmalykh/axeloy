@@ -5,8 +5,11 @@ import (
 	"fmt"
 )
 
-var ErrUnknownListener = errors.New(`unknown listener`)
-var ErrUnknownSender = errors.New(`unknown sender`)
+var (
+	ErrUnknownListenerDriver = errors.New(`unknown listener`)
+	ErrUnknownSenderDriver   = errors.New(`unknown sender`)
+	ErrDriverNameExists      = errors.New(`driver name already exists`)
+)
 
 //Repository for drivers
 type drivers struct {
@@ -17,7 +20,7 @@ type drivers struct {
 func (d *drivers) GetListener(name string) (Listener, error) {
 	driver, ok := d.listeners[name]
 	if !ok {
-		return nil, fmt.Errorf(`%w %s`, ErrUnknownListener, name)
+		return nil, fmt.Errorf(`%w %s`, ErrUnknownListenerDriver, name)
 	}
 	return driver, nil
 }
@@ -25,12 +28,10 @@ func (d *drivers) GetListener(name string) (Listener, error) {
 func (d *drivers) GetSender(name string) (Sender, error) {
 	driver, ok := d.senders[name]
 	if !ok {
-		return nil, fmt.Errorf(`%w %s`, ErrUnknownListener, name)
+		return nil, fmt.Errorf(`%w %s`, ErrUnknownSenderDriver, name)
 	}
 	return driver, nil
 }
-
-var ErrDriverNameExists = errors.New(`driver name already exists`)
 
 func (d *drivers) RegistryListener(name string, listener Listener) error {
 	if _, exists := d.listeners[name]; exists {
