@@ -41,29 +41,6 @@ func (_m *Router) ApplyRoute(ctx context.Context, source profile.Profile, destin
 	return r0
 }
 
-// DefineTracks provides a mock function with given fields: ctx, m, destinations
-func (_m *Router) DefineTracks(ctx context.Context, m message.Message, destinations router.Destination) ([]router.Track, error) {
-	ret := _m.Called(ctx, m, destinations)
-
-	var r0 []router.Track
-	if rf, ok := ret.Get(0).(func(context.Context, message.Message, router.Destination) []router.Track); ok {
-		r0 = rf(ctx, m, destinations)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]router.Track)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, message.Message, router.Destination) error); ok {
-		r1 = rf(ctx, m, destinations)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetDestinations provides a mock function with given fields: ctx, m
 func (_m *Router) GetDestinations(ctx context.Context, m message.Message) ([]router.Destination, error) {
 	ret := _m.Called(ctx, m)
@@ -85,41 +62,4 @@ func (_m *Router) GetDestinations(ctx context.Context, m message.Message) ([]rou
 	}
 
 	return r0, r1
-}
-
-// GetTracks provides a mock function with given fields: ctx, m
-func (_m *Router) GetTracks(ctx context.Context, m message.Messager) ([]router.Track, error) {
-	ret := _m.Called(ctx, m)
-
-	var r0 []router.Track
-	if rf, ok := ret.Get(0).(func(context.Context, message.Messager) []router.Track); ok {
-		r0 = rf(ctx, m)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]router.Track)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, message.Messager) error); ok {
-		r1 = rf(ctx, m)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Send provides a mock function with given fields: ctx, track
-func (_m *Router) Send(ctx context.Context, track router.Track) error {
-	ret := _m.Called(ctx, track)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, router.Track) error); ok {
-		r0 = rf(ctx, track)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }

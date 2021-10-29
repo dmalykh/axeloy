@@ -37,14 +37,16 @@ func (_m *Sender) GetId() uuid.UUID {
 }
 
 // Send provides a mock function with given fields: ctx, _a1, _a2
-func (_m *Sender) Send(ctx context.Context, _a1 profile.Profile, _a2 message.Message) (message.State, error) {
+func (_m *Sender) Send(ctx context.Context, _a1 profile.Profile, _a2 message.Message) ([]string, error) {
 	ret := _m.Called(ctx, _a1, _a2)
 
-	var r0 message.State
-	if rf, ok := ret.Get(0).(func(context.Context, profile.Profile, message.Message) message.State); ok {
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(context.Context, profile.Profile, message.Message) []string); ok {
 		r0 = rf(ctx, _a1, _a2)
 	} else {
-		r0 = ret.Get(0).(message.State)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
 	}
 
 	var r1 error
@@ -62,16 +64,39 @@ func (_m *Sender) SetParams(params model.Params) {
 	_m.Called(params)
 }
 
-// ValidateProfile provides a mock function with given fields: ctx, _a1
-func (_m *Sender) ValidateProfile(ctx context.Context, _a1 profile.Profile) error {
-	ret := _m.Called(ctx, _a1)
+// Stop provides a mock function with given fields:
+func (_m *Sender) Stop() error {
+	ret := _m.Called()
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, profile.Profile) error); ok {
-		r0 = rf(ctx, _a1)
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
+}
+
+// ValidateProfile provides a mock function with given fields: ctx, _a1
+func (_m *Sender) ValidateProfile(ctx context.Context, _a1 profile.Profile) (map[string]string, error) {
+	ret := _m.Called(ctx, _a1)
+
+	var r0 map[string]string
+	if rf, ok := ret.Get(0).(func(context.Context, profile.Profile) map[string]string); ok {
+		r0 = rf(ctx, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, profile.Profile) error); ok {
+		r1 = rf(ctx, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }

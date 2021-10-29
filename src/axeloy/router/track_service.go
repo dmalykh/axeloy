@@ -64,7 +64,7 @@ func (t *TrackService) GetTracks(ctx context.Context, m message.Message) ([]*mod
 
 func (t *TrackService) Send(ctx context.Context, track Track) error {
 	//Start attempt to send message
-	attempt, err := t.trackRepository.StartAttempt(ctx, track.GetId())
+	attempt, err := t.trackRepository.StartAttempt(ctx, track.GetId(), model.AttemptStatusInProgress)
 	if err != nil {
 		return fmt.Errorf(`%w %s`, ErrUpdateTrack, err.Error())
 	}

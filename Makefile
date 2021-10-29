@@ -4,7 +4,7 @@ build-ways:
 mocks:
 	 (cd src && mockery --all --keeptree)
 
-build-db-models:
+reform:
 	(cd src/repository/db && go generate */model/*.go )
 
  migration:

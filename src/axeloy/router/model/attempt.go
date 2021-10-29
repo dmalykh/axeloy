@@ -14,9 +14,10 @@ const (
 )
 
 type Attempt struct {
-	TrackId  uuid.UUID
-	Started  time.Time
-	Finished time.Time
-	Status   AttemptStatus
-	Info     string
+	Id         uuid.UUID
+	TrackId    uuid.UUID
+	StartedAt  time.Time
+	FinishedAt time.Time
+	Status     AttemptStatus
+	Info       string
 }

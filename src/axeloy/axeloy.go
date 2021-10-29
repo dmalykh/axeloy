@@ -8,7 +8,6 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/router"
 	"github.com/dmalykh/axeloy/axeloy/way"
-	"github.com/google/uuid"
 )
 
 var ErrSaveMessage = errors.New(`saving message error`)
@@ -66,9 +65,10 @@ func (a *Axeloy) Run(ctx context.Context, config *Config) error {
 func (a *Axeloy) sendUnsent(ctx context.Context) error {
 	tracks, err := a.trackService.GetUnsentTracks(ctx)
 	if err != nil {
-
+		return err
 	}
 	go a.send(tracks...)
+	return nil
 }
 
 func (a *Axeloy) runSender(ctx context.Context, sender chan router.Track) {

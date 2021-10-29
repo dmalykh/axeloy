@@ -41,7 +41,7 @@ func TestAxeloy_Handle(t *testing.T) {
 		messageServiceSaveReturn           error
 		messageServiceSaveStateReturn      error
 		routerServiceGetDestinationsReturn func() ([]router.Destination, error)
-		routerServiceDefineTracksReturn    func() ([]router.Track, error)
+		trackServiceDefineTracksReturn     func() ([]router.Track, error)
 		sentTracks                         int
 		err                                error
 	}{
@@ -83,7 +83,7 @@ func TestAxeloy_Handle(t *testing.T) {
 			err:                           ErrInternalError,
 		},
 		{
-			name:                     `No destiinations`,
+			name:                     `No destinations`,
 			messageServiceSaveReturn: nil,
 			routerServiceGetDestinationsReturn: func() ([]router.Destination, error) {
 				return []router.Destination{
@@ -99,7 +99,7 @@ func TestAxeloy_Handle(t *testing.T) {
 					&mocks.Destination{},
 				}, nil
 			},
-			routerServiceDefineTracksReturn: func() ([]router.Track, error) {
+			trackServiceDefineTracksReturn: func() ([]router.Track, error) {
 				return nil, errors.New(`any error`)
 			},
 			messageServiceSaveReturn: nil,
@@ -112,7 +112,7 @@ func TestAxeloy_Handle(t *testing.T) {
 					&mocks.Destination{},
 				}, nil
 			},
-			routerServiceDefineTracksReturn: func() ([]router.Track, error) {
+			trackServiceDefineTracksReturn: func() ([]router.Track, error) {
 				return nil, errors.New(`any error`)
 			},
 			messageServiceSaveStateReturn: errors.New(`any error`),
@@ -125,7 +125,7 @@ func TestAxeloy_Handle(t *testing.T) {
 					&mocks.Destination{},
 				}, nil
 			},
-			routerServiceDefineTracksReturn: func() ([]router.Track, error) {
+			trackServiceDefineTracksReturn: func() ([]router.Track, error) {
 				return []router.Track{
 					&mocks.Track{},
 					&mocks.Track{},
@@ -140,7 +140,7 @@ func TestAxeloy_Handle(t *testing.T) {
 					&mocks.Destination{},
 				}, nil
 			},
-			routerServiceDefineTracksReturn: func() ([]router.Track, error) {
+			trackServiceDefineTracksReturn: func() ([]router.Track, error) {
 				return []router.Track{
 					&mocks.Track{},
 				}, nil
@@ -156,7 +156,7 @@ func TestAxeloy_Handle(t *testing.T) {
 					&mocks.Destination{},
 				}, nil
 			},
-			routerServiceDefineTracksReturn: func() ([]router.Track, error) {
+			trackServiceDefineTracksReturn: func() ([]router.Track, error) {
 				return []router.Track{
 					&mocks.Track{},
 				}, nil
@@ -176,8 +176,8 @@ func TestAxeloy_Handle(t *testing.T) {
 				}
 			}
 
-			if tt.routerServiceDefineTracksReturn == nil {
-				tt.routerServiceDefineTracksReturn = func() ([]router.Track, error) {
+			if tt.trackServiceDefineTracksReturn == nil {
+				tt.trackServiceDefineTracksReturn = func() ([]router.Track, error) {
 					return nil, nil
 				}
 			}
@@ -191,11 +191,14 @@ func TestAxeloy_Handle(t *testing.T) {
 
 			var routerServiceMock = new(mocks.Router)
 			routerServiceMock.On("GetDestinations", ctx, messageMock).Return(tt.routerServiceGetDestinationsReturn())
-			routerServiceMock.On("DefineTracks", ctx, messageMock, mock.Anything).Return(tt.routerServiceDefineTracksReturn())
+
+			var trackServiceMock = new(mocks.Tracker)
+			trackServiceMock.On("DefineTracks", ctx, messageMock, mock.Anything).Return(tt.trackServiceDefineTracksReturn())
 
 			a := &Axeloy{
 				messageService: messageServiceMock,
 				routerService:  routerServiceMock,
+				trackService:   trackServiceMock,
 				senderChan:     make(chan router.Track),
 			}
 			defer func() {
