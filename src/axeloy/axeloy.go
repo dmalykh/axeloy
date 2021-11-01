@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dmalykh/axeloy/axeloy/message"
+	messagemodel "github.com/dmalykh/axeloy/axeloy/message/model"
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/router"
 	"github.com/dmalykh/axeloy/axeloy/way"
@@ -31,12 +32,18 @@ type Axeloy struct {
 }
 
 type Config struct {
-	Router router.Router
+	Router   router.Router
+	Tracker  router.Tracker
+	Messager message.Messager
+	Wayer    way.Wayer
 }
 
 func New(config *Config) *Axeloy {
 	return &Axeloy{
-		routerService:
+		routerService:  config.Router,
+		trackService:   config.Tracker,
+		messageService: config.Messager,
+		waysService:    config.Wayer,
 	}
 }
 
@@ -93,14 +100,14 @@ func (a *Axeloy) Subscribe(ctx context.Context, source profile.Profile, destinat
 // The Handle function receives message and saves it
 func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	//Save message
-	if err := a.messageService.Save(ctx, m); err != nil {
+	if err := a.messageService.Add(ctx, m); err != nil {
 		return fmt.Errorf(`%w:%s`, ErrSaveMessage, err.Error())
 	}
 
 	//Get destinations for message
 	destinations, err := a.routerService.GetDestinations(ctx, m)
 	if err != nil {
-		if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
+		if err := a.messageService.UpdateStatus(ctx, m, messagemodel.StatusError, err.Error()); err != nil {
 			return fmt.Errorf(`%w: %s`, ErrInternalError, err.Error())
 		}
 		return fmt.Errorf(`%w %s`, ErrFetchDestinations, err.Error())
@@ -108,7 +115,7 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 
 	//Return error when destinations absent
 	if len(destinations) == 0 {
-		if err := a.messageService.SaveState(ctx, m, message.NoDestinations); err != nil {
+		if err := a.messageService.UpdateStatus(ctx, m, messagemodel.StatusNoDestinations); err != nil {
 			return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
 		}
 		return ErrNoDestinations
@@ -117,14 +124,14 @@ func (a *Axeloy) Handle(ctx context.Context, m message.Message) error {
 	//Define tracks for message and send them to sender channel
 	err = a.Send(ctx, m, destinations...)
 	if err != nil {
-		if err := a.messageService.SaveState(ctx, m, message.Error, err.Error()); err != nil {
+		if err := a.messageService.UpdateStatus(ctx, m, messagemodel.StatusError, err.Error()); err != nil {
 			return fmt.Errorf(`%w: %s`, ErrInternalError, err.Error())
 		}
 		return fmt.Errorf(`%w %s`, ErrDefineTracks, err.Error())
 	}
 
 	//Mark message as processed
-	if err := a.messageService.SaveState(ctx, m, message.Processed); err != nil {
+	if err := a.messageService.UpdateStatus(ctx, m, messagemodel.StatusProcessed); err != nil {
 		return fmt.Errorf(`%w:%s`, ErrInternalError, err.Error())
 	}
 	return nil

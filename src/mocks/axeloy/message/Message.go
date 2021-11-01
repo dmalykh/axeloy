@@ -3,8 +3,13 @@
 package mocks
 
 import (
-	message "github.com/dmalykh/axeloy/axeloy/message"
+	location "github.com/dmalykh/axeloy/axeloy/message/location"
+
 	mock "github.com/stretchr/testify/mock"
+
+	model "github.com/dmalykh/axeloy/axeloy/message/model"
+
+	payload "github.com/dmalykh/axeloy/axeloy/message/payload"
 
 	uuid "github.com/google/uuid"
 )
@@ -14,16 +19,59 @@ type Message struct {
 	mock.Mock
 }
 
+// AddInfo provides a mock function with given fields: info
+func (_m *Message) AddInfo(info ...string) {
+	_va := make([]interface{}, len(info))
+	for _i := range info {
+		_va[_i] = info[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _va...)
+	_m.Called(_ca...)
+}
+
 // GetDestinations provides a mock function with given fields:
-func (_m *Message) GetDestinations() []message.Payload {
+func (_m *Message) GetDestinations() []location.Location {
 	ret := _m.Called()
 
-	var r0 []message.Payload
-	if rf, ok := ret.Get(0).(func() []message.Payload); ok {
+	var r0 []location.Location
+	if rf, ok := ret.Get(0).(func() []location.Location); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]message.Payload)
+			r0 = ret.Get(0).([]location.Location)
+		}
+	}
+
+	return r0
+}
+
+// GetInfo provides a mock function with given fields:
+func (_m *Message) GetInfo() []string {
+	ret := _m.Called()
+
+	var r0 []string
+	if rf, ok := ret.Get(0).(func() []string); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	return r0
+}
+
+// GetPayload provides a mock function with given fields:
+func (_m *Message) GetPayload() payload.Payload {
+	ret := _m.Called()
+
+	var r0 payload.Payload
+	if rf, ok := ret.Get(0).(func() payload.Payload); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(payload.Payload)
 		}
 	}
 
@@ -31,16 +79,30 @@ func (_m *Message) GetDestinations() []message.Payload {
 }
 
 // GetSource provides a mock function with given fields:
-func (_m *Message) GetSource() message.Payload {
+func (_m *Message) GetSource() location.Location {
 	ret := _m.Called()
 
-	var r0 message.Payload
-	if rf, ok := ret.Get(0).(func() message.Payload); ok {
+	var r0 location.Location
+	if rf, ok := ret.Get(0).(func() location.Location); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(message.Payload)
+			r0 = ret.Get(0).(location.Location)
 		}
+	}
+
+	return r0
+}
+
+// GetStatus provides a mock function with given fields:
+func (_m *Message) GetStatus() model.Status {
+	ret := _m.Called()
+
+	var r0 model.Status
+	if rf, ok := ret.Get(0).(func() model.Status); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(model.Status)
 	}
 
 	return r0
@@ -60,4 +122,15 @@ func (_m *Message) GetUUID() uuid.UUID {
 	}
 
 	return r0
+}
+
+// SetInfo provides a mock function with given fields: info
+func (_m *Message) SetInfo(info ...string) {
+	_va := make([]interface{}, len(info))
+	for _i := range info {
+		_va[_i] = info[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _va...)
+	_m.Called(_ca...)
 }

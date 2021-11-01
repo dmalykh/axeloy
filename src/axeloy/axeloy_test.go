@@ -134,7 +134,7 @@ func TestAxeloy_Handle(t *testing.T) {
 			sentTracks: 2,
 		},
 		{
-			name: `Error save Processed message's state`,
+			name: `Error save StateProcessed message's state`,
 			routerServiceGetDestinationsReturn: func() ([]router.Destination, error) {
 				return []router.Destination{
 					&mocks.Destination{},

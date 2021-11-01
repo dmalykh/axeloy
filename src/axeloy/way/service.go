@@ -13,15 +13,29 @@ import (
 
 type WayService struct {
 	wayRepository repository.WayRepository
-	drivers       drivers
-	listeners     map[uuid.UUID]Listener
+
+	drivers   drivers
+	listeners map[uuid.UUID]Listener
+}
+
+type Config struct {
+	WayRepository repository.WayRepository
+	Drivers       map[string]DriverConfig
+}
+
+func NewService(ctx context.Context, config *Config) (*WayService, error) {
+	var service = &WayService{
+		wayRepository: config.WayRepository,
+	}
+	return service, service.load(ctx, config)
 }
 
 var (
-	ErrNoWayName       = errors.New(`name of way doesn't exists`)
-	ErrNoWayDriver     = errors.New(`driver doesn't exists`)
-	ErrUnknownListener = errors.New(`can't receive listener`)
-	ErrStopListener    = errors.New(`can't stop listener`)
+	ErrNoWayName                       = errors.New(`name of way doesn't exists`)
+	ErrNoWayDriver                     = errors.New(`driver doesn't exists`)
+	ErrUnknownListener                 = errors.New(`can't receive listener`)
+	ErrStopListener                    = errors.New(`can't stop listener`)
+	ErrNotImplementAnyOfWaysInterfaces = errors.New(`doesn't implements any of ways interfaces`)
 )
 
 func (w *WayService) GetSenderByName(ctx context.Context, name string) (Sender, error) {
@@ -36,23 +50,21 @@ func (w *WayService) GetSenderByName(ctx context.Context, name string) (Sender, 
 	return sender, nil
 }
 
-type Config struct {
-	Ways map[string]struct {
-		DriverName string
-		DriverPath string
-		Params     map[string]interface{}
+func (w *WayService) GetSenderById(ctx context.Context, id uuid.UUID) (Sender, error) {
+	way, err := w.wayRepository.GetById(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf(`%s %w`, id.String(), ErrNoWayName)
 	}
+	sender, err := w.drivers.GetSender(way.GetDriverName())
+	if err != nil {
+		return nil, fmt.Errorf(`%s %w`, way.GetDriverName(), ErrNoWayDriver)
+	}
+	return sender, nil
 }
-
-func NewService() *WayService {
-	return &WayService{}
-}
-
-var ErrrNotImplementAnyOfWaysInterfaces = errors.New(`doesn't implements any of ways interfaces`)
 
 // The function loads ways from configuration.
-func (w *WayService) load(ctx context.Context, config Config) error {
-	for name, wayConfig := range config.Ways {
+func (w *WayService) load(ctx context.Context, config *Config) error {
+	for name, wayConfig := range config.Drivers {
 		plug, err := plugin.Open(wayConfig.DriverPath)
 		if err != nil {
 			return err //@TODO
@@ -64,7 +76,7 @@ func (w *WayService) load(ctx context.Context, config Config) error {
 		//If driver is listener, register it
 		listener, canListen := way.(Listener)
 		if canListen {
-			if err := w.drivers.RegistryListener(wayConfig.DriverName, listener); err != nil {
+			if err := w.drivers.RegistryListener(name, listener); err != nil {
 				return err //@TODO
 			}
 			//if err := w.wayRepository.AddListener(ctx, name, wayConfig.DriverName, wayConfig.Params); err != nil {
@@ -74,7 +86,7 @@ func (w *WayService) load(ctx context.Context, config Config) error {
 		//If driver is sender, register it
 		sender, canSend := way.(Sender)
 		if canSend {
-			if err := w.drivers.RegistrySender(wayConfig.DriverName, sender); err != nil {
+			if err := w.drivers.RegistrySender(name, sender); err != nil {
 				return err //@TODO
 			}
 			//if err := w.wayRepository.AddSender(ctx, name, wayConfig.DriverName, wayConfig.Params); err != nil {
@@ -83,7 +95,7 @@ func (w *WayService) load(ctx context.Context, config Config) error {
 		}
 		//If driver isn't sender and isn't listener, what is it?!
 		if !canListen && !canSend {
-			return fmt.Errorf(`%s %w`, name, ErrrNotImplementAnyOfWaysInterfaces)
+			return fmt.Errorf(`%s %w`, name, ErrNotImplementAnyOfWaysInterfaces)
 		}
 	}
 	return nil

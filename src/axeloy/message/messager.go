@@ -2,34 +2,36 @@ package message
 
 import (
 	"context"
-	"github.com/dmalykh/axeloy/axeloy/profile"
+	"github.com/dmalykh/axeloy/axeloy/message/location"
+	"github.com/dmalykh/axeloy/axeloy/message/model"
+	"github.com/dmalykh/axeloy/axeloy/message/payload"
 	"github.com/google/uuid"
 )
 
-type State string
-
-const (
-	New             State = "new"
-	Processed       State = "processed"
-	NotValidProfile State = "not_valid_profile"
-	Sent            State = "sent"
-	Error           State = "error"
-	NoDestinations  State = "no_destinations"
-)
+//type State string
+//
+//const (
+//	StateNew            State = "new"
+//	StateProcessed      State = "processed"
+//	StateSent           State = "sent"
+//	StateError          State = "error"
+//	StateNoDestinations State = "no_destinations"
+//)
 
 type Message interface {
 	GetUUID() uuid.UUID
-	GetSource() Payload
-	GetDestinations() []Payload
+	GetSource() location.Location
+	GetDestinations() []location.Location
+	GetPayload() payload.Payload
+	GetStatus() model.Status
+	GetInfo() []string
+	SetInfo(info ...string)
+	AddInfo(info ...string)
 }
 
 type Messager interface {
 	GetById(ctx context.Context, id uuid.UUID) (Message, error)
-	Save(ctx context.Context, m Message) error
-	SaveState(ctx context.Context, m Message, state State, info ...string) error
-}
-
-type Payload interface {
-	GetWays() []string
-	GetProfile() profile.Profile
+	Add(ctx context.Context, msg Message) error
+	Update(ctx context.Context, msg Message) error
+	UpdateStatus(ctx context.Context, msg Message, status model.Status, info ...string) error
 }

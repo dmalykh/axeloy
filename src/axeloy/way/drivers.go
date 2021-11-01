@@ -11,6 +11,11 @@ var (
 	ErrDriverNameExists      = errors.New(`driver name already exists`)
 )
 
+type DriverConfig struct {
+	DriverPath string
+	Params     map[string]interface{}
+}
+
 //Repository for drivers
 type drivers struct {
 	listeners map[string]Listener

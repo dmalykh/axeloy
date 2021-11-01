@@ -5,8 +5,10 @@ package mocks
 import (
 	context "context"
 
-	uuid "github.com/google/uuid"
+	message "github.com/dmalykh/axeloy/axeloy/message"
 	mock "github.com/stretchr/testify/mock"
+
+	uuid "github.com/google/uuid"
 
 	way "github.com/dmalykh/axeloy/axeloy/way"
 )
@@ -39,13 +41,13 @@ func (_m *Wayer) GetAvailableListeners(ctx context.Context) ([]way.Listener, err
 	return r0, r1
 }
 
-// GetSenderById provides a mock function with given fields: ctx, _a1
-func (_m *Wayer) GetSenderById(ctx context.Context, _a1 uuid.UUID) (way.Sender, error) {
-	ret := _m.Called(ctx, _a1)
+// GetSenderById provides a mock function with given fields: ctx, id
+func (_m *Wayer) GetSenderById(ctx context.Context, id uuid.UUID) (way.Sender, error) {
+	ret := _m.Called(ctx, id)
 
 	var r0 way.Sender
 	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) way.Sender); ok {
-		r0 = rf(ctx, _a1)
+		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(way.Sender)
@@ -54,7 +56,7 @@ func (_m *Wayer) GetSenderById(ctx context.Context, _a1 uuid.UUID) (way.Sender, 
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, _a1)
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -83,4 +85,60 @@ func (_m *Wayer) GetSenderByName(ctx context.Context, name string) (way.Sender, 
 	}
 
 	return r0, r1
+}
+
+// RunListener provides a mock function with given fields: ctx, listener, handler
+func (_m *Wayer) RunListener(ctx context.Context, listener way.Listener, handler func(context.Context, message.Message) error) error {
+	ret := _m.Called(ctx, listener, handler)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, way.Listener, func(context.Context, message.Message) error) error); ok {
+		r0 = rf(ctx, listener, handler)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RunListeners provides a mock function with given fields: ctx, handler
+func (_m *Wayer) RunListeners(ctx context.Context, handler func(context.Context, message.Message) error) error {
+	ret := _m.Called(ctx, handler)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context, message.Message) error) error); ok {
+		r0 = rf(ctx, handler)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Stop provides a mock function with given fields:
+func (_m *Wayer) Stop() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StopListener provides a mock function with given fields: ctx, listener
+func (_m *Wayer) StopListener(ctx context.Context, listener way.Listener) error {
+	ret := _m.Called(ctx, listener)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, way.Listener) error); ok {
+		r0 = rf(ctx, listener)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }

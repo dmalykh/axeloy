@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/dmalykh/axeloy/axeloy/core"
 	"github.com/dmalykh/axeloy/axeloy/message"
+	"github.com/dmalykh/axeloy/axeloy/message/location"
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/router/model"
 	"github.com/dmalykh/axeloy/axeloy/router/repository"
@@ -21,7 +22,7 @@ var (
 	ErrGetTrack                = errors.New(`couldn't got track`)
 )
 
-func NewRouter(routeRepository repository.RouteRepository, wayer way.Wayer) *RouteService {
+func NewRouter(routeRepository repository.RouteRepository, wayer way.Wayer) Router {
 	return &RouteService{
 		routeRepository: routeRepository,
 		wayService:      wayer,
@@ -50,8 +51,8 @@ func (r *RouteService) GetDestinations(ctx context.Context, m message.Message) (
 }
 
 //
-func (r *RouteService) GetDestinationsByRoute(ctx context.Context, payload message.Payload) ([]Destination, error) {
-	routes, err := r.routeRepository.GetBySourceProfile(ctx, payload.GetProfile())
+func (r *RouteService) GetDestinationsByRoute(ctx context.Context, loc location.Location) ([]Destination, error) {
+	routes, err := r.routeRepository.GetBySourceProfile(ctx, loc.GetProfile())
 	if err != nil {
 		if errors.Is(err, core.ErrRepositoryFetchError) {
 			return nil, fmt.Errorf(`%w: %s`, ErrGettingDestinationError, err.Error())
@@ -86,17 +87,17 @@ func (r *RouteService) GetDestinationsByRoute(ctx context.Context, payload messa
 }
 
 // The GetDestinationsForDirectMessage returns destinations for messages which has own destinations
-func (r *RouteService) GetDestinationsForDirectMessage(ctx context.Context, payloads []message.Payload) ([]Destination, error) {
+func (r *RouteService) GetDestinationsForDirectMessage(ctx context.Context, locs []location.Location) ([]Destination, error) {
 	var destinations = make([]Destination, 0)
 	//Range message's destinations
-	for _, payload := range payloads {
+	for _, loc := range locs {
 		//Get ways by names and convert them to route's destinations
-		for _, wayName := range payload.GetWays() {
+		for _, wayName := range loc.GetWays() {
 			sender, err := r.wayService.GetSenderByName(ctx, wayName)
 			if err != nil {
 				return destinations, fmt.Errorf(`%w %s`, ErrUnknownSender, wayName)
 			}
-			destinations = append(destinations, r.MakeDestination(payload.GetProfile(), sender))
+			destinations = append(destinations, r.MakeDestination(loc.GetProfile(), sender))
 		}
 	}
 	return destinations, nil

@@ -25,9 +25,17 @@ type TrackService struct {
 	messageService  message.Messager
 }
 
-func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, destination Destination) ([]*model.Track, error) {
-	var plannedTracks = make([]*model.Track, 0)
-	var errorTracks = make([]*model.Track, 0)
+func NewTracker(trackRepository repository.TrackRepository, wayService way.Wayer, messageService message.Messager) Tracker {
+	return &TrackService{
+		trackRepository: trackRepository,
+		wayService:      wayService,
+		messageService:  messageService,
+	}
+}
+
+func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, destination Destination) ([]Track, error) {
+	var plannedTracks = make([]Track, 0)
+	var tracks = make([]*model.Track, 0)
 	for _, w := range destination.GetWays(ctx) {
 		var track = &model.Track{
 			SenderId:  w.GetId(),
@@ -36,6 +44,7 @@ func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, dest
 			Profile:   destination.GetProfile(ctx),
 			Status:    model.Planned,
 		}
+		//Validate, if no errors — return
 		errinfo, err := w.ValidateProfile(ctx, destination.GetProfile(ctx))
 		if err != nil {
 			track.Status = model.Error
@@ -43,23 +52,27 @@ func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, dest
 				data, _ := json.Marshal(info)
 				return string(data)
 			}(errinfo)
-			errorTracks = append(plannedTracks, track)
 		} else {
 			plannedTracks = append(plannedTracks, track)
 		}
+		tracks = append(tracks, track)
 	}
-	if err := t.trackRepository.CreateTrack(ctx, append(plannedTracks, errorTracks...)...); err != nil {
+	if err := t.trackRepository.CreateTrack(ctx, tracks...); err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrCreateTrack, err.Error())
 	}
 	return plannedTracks, nil
 }
 
-func (t *TrackService) GetTracks(ctx context.Context, m message.Message) ([]*model.Track, error) {
-	tracks, err := t.trackRepository.GetTracksByMessageId(ctx, m.GetUUID())
-	if err != nil {
-		return nil, fmt.Errorf(`%w %s`, ErrGetTrack, err.Error())
-	}
-	return tracks, nil
+//func (t *TrackService) GetTracks(ctx context.Context, m message.Message) ([]*model.Track, error) {
+//	tracks, err := t.trackRepository.GetTracksByMessageId(ctx, m.GetUUID())
+//	if err != nil {
+//		return nil, fmt.Errorf(`%w %s`, ErrGetTrack, err.Error())
+//	}
+//	return tracks, nil
+//}
+
+func (t *TrackService) GetUnsentTracks(ctx context.Context) ([]Track, error) {
+	panic("implement me")
 }
 
 func (t *TrackService) Send(ctx context.Context, track Track) error {

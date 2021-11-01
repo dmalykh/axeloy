@@ -102,13 +102,13 @@ func (_m *TrackRepository) SetStatus(ctx context.Context, id uuid.UUID, status m
 	return r0
 }
 
-// StartAttempt provides a mock function with given fields: ctx, trackId
-func (_m *TrackRepository) StartAttempt(ctx context.Context, trackId uuid.UUID) (*model.Attempt, error) {
-	ret := _m.Called(ctx, trackId)
+// StartAttempt provides a mock function with given fields: ctx, trackId, status
+func (_m *TrackRepository) StartAttempt(ctx context.Context, trackId uuid.UUID, status model.AttemptStatus) (*model.Attempt, error) {
+	ret := _m.Called(ctx, trackId, status)
 
 	var r0 *model.Attempt
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *model.Attempt); ok {
-		r0 = rf(ctx, trackId)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, model.AttemptStatus) *model.Attempt); ok {
+		r0 = rf(ctx, trackId, status)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Attempt)
@@ -116,8 +116,8 @@ func (_m *TrackRepository) StartAttempt(ctx context.Context, trackId uuid.UUID) 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, trackId)
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, model.AttemptStatus) error); ok {
+		r1 = rf(ctx, trackId, status)
 	} else {
 		r1 = ret.Error(1)
 	}

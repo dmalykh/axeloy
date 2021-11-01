@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-type TrackRepository struct {
-	db *reform.DB
-}
-
 var (
 	ErrDbQuery        = errors.New(`database error`)
 	ErrDbError        = errors.New(`database error`)
@@ -27,7 +23,21 @@ var (
 	ErrUpdateAttempt  = errors.New(`attempt wasn't updated`)
 )
 
-func (t *TrackRepository) CreateTrack(ctx context.Context, tracks ...model.Track) error {
+type TrackRepository struct {
+	db *reform.DB
+}
+
+func (t *TrackRepository) GetTracksByMessageId(ctx context.Context, messageId uuid.UUID) ([]*model.Track, error) {
+	panic("implement me")
+}
+
+func NewTrackRepository(db *reform.DB) *TrackRepository {
+	return &TrackRepository{
+		db: db,
+	}
+}
+
+func (t *TrackRepository) CreateTrack(ctx context.Context, tracks ...*model.Track) error {
 	if len(tracks) == 0 {
 		return nil
 	}

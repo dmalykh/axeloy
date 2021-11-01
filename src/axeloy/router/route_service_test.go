@@ -12,6 +12,7 @@ import (
 	mocks "github.com/dmalykh/axeloy/mocks/axeloy/profile"
 	routerMock "github.com/dmalykh/axeloy/mocks/axeloy/router/repository"
 	wayMock "github.com/dmalykh/axeloy/mocks/axeloy/way"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -24,7 +25,7 @@ func TestRouteService_GetDestinationsByRoute(t *testing.T) {
 	}
 	type testCase struct {
 		name          string
-		messageSource message.Payload
+		messageSource message.Location
 		GetBySource   getBySource
 		err           error
 	}
@@ -44,10 +45,10 @@ func TestRouteService_GetDestinationsByRoute(t *testing.T) {
 			GetBySource: getBySource{[]*model.Route{
 				{
 					Destination: &mocks.Profile{},
-					Senders: []way.Sender{
-						&wayMock.Sender{},
-						&wayMock.Sender{},
-						&wayMock.Sender{},
+					WaysIds: []uuid.UUID{
+						uuid.New(),
+						uuid.New(),
+						uuid.New(),
 					},
 				},
 			}, nil},
@@ -75,7 +76,14 @@ func TestRouteService_GetDestinationsByRoute(t *testing.T) {
 		routeRepositoryMock.On("GetBySource", ctx, tc.messageSource).Return(tc.GetBySource.routes, tc.GetBySource.err)
 		var wantDestinations = make([]Destination, 0)
 		for _, route := range tc.GetBySource.routes {
-			var dest = s.MakeDestination(route.GetDestination(), route.GetSenders()...)
+			var senders = func(ids []uuid.UUID) []way.Sender {
+				var senders = make([]way.Sender, len(ids))
+				for i, _ := range ids {
+					senders[i] = &wayMock.Sender{}
+				}
+				return senders
+			}(route.GetWaysIds())
+			var dest = s.MakeDestination(route.GetDestination(), senders...)
 			//
 			// ATTENTION! Destination in route MUST be unique
 			//
@@ -145,8 +153,8 @@ func TestRouteService_GetDestinationsForDirectMessage(t *testing.T) {
 		//Set router destinations for message
 		var lenDestinations = 0
 		if len(tc.messageDestinations) > 0 {
-			var destinations = func(td []testDestination) []message.Payload {
-				var destinations = make([]message.Payload, len(td))
+			var destinations = func(td []testDestination) []message.Location {
+				var destinations = make([]message.Location, len(td))
 				for i, d := range td {
 					var dest messageMock.Destination
 					dest.On("GetWays").Return(d.ways)

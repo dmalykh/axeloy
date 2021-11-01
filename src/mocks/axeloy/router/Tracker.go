@@ -16,34 +16,13 @@ type Tracker struct {
 	mock.Mock
 }
 
-// AddAttempt provides a mock function with given fields: ctx, t, status, info
-func (_m *Tracker) AddAttempt(ctx context.Context, t router.Track, status router.TrackStatus, info ...string) error {
-	_va := make([]interface{}, len(info))
-	for _i := range info {
-		_va[_i] = info[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, t, status)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, router.Track, router.TrackStatus, ...string) error); ok {
-		r0 = rf(ctx, t, status, info...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// DefineTracks provides a mock function with given fields: ctx, m, destinations
-func (_m *Tracker) DefineTracks(ctx context.Context, m message.Message, destinations router.Destination) ([]router.Track, error) {
-	ret := _m.Called(ctx, m, destinations)
+// DefineTracks provides a mock function with given fields: ctx, m, destination
+func (_m *Tracker) DefineTracks(ctx context.Context, m message.Message, destination router.Destination) ([]router.Track, error) {
+	ret := _m.Called(ctx, m, destination)
 
 	var r0 []router.Track
 	if rf, ok := ret.Get(0).(func(context.Context, message.Message, router.Destination) []router.Track); ok {
-		r0 = rf(ctx, m, destinations)
+		r0 = rf(ctx, m, destination)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]router.Track)
@@ -52,7 +31,7 @@ func (_m *Tracker) DefineTracks(ctx context.Context, m message.Message, destinat
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, message.Message, router.Destination) error); ok {
-		r1 = rf(ctx, m, destinations)
+		r1 = rf(ctx, m, destination)
 	} else {
 		r1 = ret.Error(1)
 	}

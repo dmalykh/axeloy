@@ -18,6 +18,12 @@ var ErrCreateRoute = errors.New(`can't insert route`)
 var ErrCreateProfile = errors.New(`profile couldn't be saved`)
 var ErrCreateWays = errors.New(`ways couldn't be saved`)
 
+func NewRouteRepository(db *reform.DB) *RouteRepository {
+	return &RouteRepository{
+		db: db,
+	}
+}
+
 type RouteRepository struct {
 	db *reform.DB
 }
@@ -141,7 +147,7 @@ func (r *RouteRepository) GetBySourceProfile(ctx context.Context, p profile.Prof
 	return routes, nil
 }
 
-func (r *RouteRepository) CreateRoute(ctx context.Context, route *model.Route) error {
+func (r *RouteRepository) CreateRoute(ctx context.Context, routes ...*model.Route) error {
 
 	var routeId = uuid.New()
 
@@ -150,36 +156,38 @@ func (r *RouteRepository) CreateRoute(ctx context.Context, route *model.Route) e
 		return err //@TODO
 	}
 
-	//CreateRoute route @TODO: а нужна ли вообще эта таблица из одной колонки?
-	if err := r.createRoute(tx, routeId); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf(`%w %s, rollback error %s`, ErrCreateRoute, routeId.String(), err.Error())
+	for _, route := range routes {
+		//CreateRoute route @TODO: а нужна ли вообще эта таблица из одной колонки?
+		if err := r.createRoute(tx, routeId); err != nil {
+			if err := tx.Rollback(); err != nil {
+				return fmt.Errorf(`%w %s, rollback error %s`, ErrCreateRoute, routeId.String(), err.Error())
+			}
+			return fmt.Errorf(`%w %s`, ErrCreateRoute, err.Error())
 		}
-		return fmt.Errorf(`%w %s`, ErrCreateRoute, err.Error())
-	}
 
-	//Save source profiles for route
-	if err := r.createProfile(tx, routeId, dbmodel.Source, route.GetSource()); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf(`%s %w, rollback error %s`, dbmodel.Source, ErrDbError, err.Error())
+		//Save source profiles for route
+		if err := r.createProfile(tx, routeId, dbmodel.Source, route.GetSource()); err != nil {
+			if err := tx.Rollback(); err != nil {
+				return fmt.Errorf(`%s %w, rollback error %s`, dbmodel.Source, ErrDbError, err.Error())
+			}
+			return fmt.Errorf(`%s %w %s`, dbmodel.Source, ErrCreateProfile, err.Error())
 		}
-		return fmt.Errorf(`%s %w %s`, dbmodel.Source, ErrCreateProfile, err.Error())
-	}
 
-	//Save destination profiles for route
-	if err := r.createProfile(tx, routeId, dbmodel.Destination, route.GetDestination()); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf(`%s %w, rollback error %s`, dbmodel.Destination, ErrDbError, err.Error())
+		//Save destination profiles for route
+		if err := r.createProfile(tx, routeId, dbmodel.Destination, route.GetDestination()); err != nil {
+			if err := tx.Rollback(); err != nil {
+				return fmt.Errorf(`%s %w, rollback error %s`, dbmodel.Destination, ErrDbError, err.Error())
+			}
+			return fmt.Errorf(`%s %w %s`, dbmodel.Destination, ErrCreateProfile, err.Error())
 		}
-		return fmt.Errorf(`%s %w %s`, dbmodel.Destination, ErrCreateProfile, err.Error())
-	}
 
-	//Save ways
-	if err := r.createWays(tx, routeId, route.GetWaysIds()); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf(`%w, rollback error %s`, ErrCreateWays, err.Error())
+		//Save ways
+		if err := r.createWays(tx, routeId, route.GetWaysIds()); err != nil {
+			if err := tx.Rollback(); err != nil {
+				return fmt.Errorf(`%w, rollback error %s`, ErrCreateWays, err.Error())
+			}
+			return fmt.Errorf(`%w %s`, ErrCreateWays, err.Error())
 		}
-		return fmt.Errorf(`%w %s`, ErrCreateWays, err.Error())
 	}
 
 	return tx.Commit()
