@@ -38,11 +38,11 @@ func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, dest
 	var tracks = make([]*model.Track, 0)
 	for _, w := range destination.GetWays(ctx) {
 		var track = &model.Track{
-			SenderId:  w.GetId(),
-			MessageId: m.GetUUID(),
-			Attempts:  0,
-			Profile:   destination.GetProfile(ctx),
-			Status:    model.Planned,
+			SenderName: w.GetName(),
+			MessageId:  m.GetUUID(),
+			Attempts:   0,
+			Profile:    destination.GetProfile(ctx),
+			Status:     model.Planned,
 		}
 		//Validate, if no errors — return
 		errinfo, err := w.ValidateProfile(ctx, destination.GetProfile(ctx))
@@ -91,12 +91,12 @@ func (t *TrackService) Send(ctx context.Context, track Track) error {
 	}
 
 	//Get sender
-	sender, err := t.wayService.GetSenderById(ctx, track.GetSenderId())
+	sender, err := t.wayService.GetSenderByName(ctx, track.GetSenderName())
 	if err != nil {
 		if err := t.trackRepository.FinishAttempt(ctx, attempt, model.AttemptStatusError, ErrGetSender.Error(), err.Error()); err != nil {
 			return fmt.Errorf(`%w %s`, ErrSaveAttempt, err.Error())
 		}
-		return fmt.Errorf(`%w %s %s`, ErrGetSender, track.GetSenderId().String(), err.Error())
+		return fmt.Errorf(`%w %s %s`, ErrGetSender, track.GetSenderName(), err.Error())
 	}
 
 	//Get message

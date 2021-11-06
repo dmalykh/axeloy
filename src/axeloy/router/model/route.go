@@ -9,15 +9,15 @@ type Route struct {
 	Id          uuid.UUID
 	Source      profile.Profile
 	Destination profile.Profile
-	WaysIds     []uuid.UUID
+	Ways        []string
 }
 
 func (r *Route) GetId() uuid.UUID {
 	return r.Id
 }
 
-func (r *Route) GetWaysIds() []uuid.UUID {
-	return r.WaysIds
+func (r *Route) GetWays() []string {
+	return r.Ways
 }
 
 func (r Route) GetDestination() profile.Profile {

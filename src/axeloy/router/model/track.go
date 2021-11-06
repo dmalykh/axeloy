@@ -15,21 +15,21 @@ const (
 )
 
 type Track struct {
-	Id        uuid.UUID
-	SenderId  uuid.UUID
-	MessageId uuid.UUID
-	Profile   profile.Profile
-	Attempts  int
-	Info      string
-	Status    TrackStatus
+	Id         uuid.UUID
+	SenderName string
+	MessageId  uuid.UUID
+	Profile    profile.Profile
+	Attempts   int
+	Info       string
+	Status     TrackStatus
 }
 
 func (t *Track) GetId() uuid.UUID {
 	return t.Id
 }
 
-func (t *Track) GetSenderId() uuid.UUID {
-	return t.SenderId
+func (t *Track) GetSenderName() string {
+	return t.SenderName
 }
 
 func (t *Track) GetMessageId() uuid.UUID {

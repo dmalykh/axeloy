@@ -11,7 +11,6 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/router/model"
 	"github.com/dmalykh/axeloy/axeloy/router/repository"
 	"github.com/dmalykh/axeloy/axeloy/way"
-	"github.com/google/uuid"
 )
 
 var (
@@ -64,10 +63,10 @@ func (r *RouteService) GetDestinationsByRoute(ctx context.Context, loc location.
 		var destinations = make([]Destination, 0)
 		for _, route := range routes {
 			// Get only available senders @TODO: Is it possible to get thousands senders?
-			var senders = func(wayIds []uuid.UUID) []way.Sender {
+			var senders = func(ways []string) []way.Sender {
 				var s = make([]way.Sender, 0)
-				for _, wayId := range wayIds {
-					sender, err := r.wayService.GetSenderById(ctx, wayId)
+				for _, name := range ways {
+					sender, err := r.wayService.GetSenderByName(ctx, name)
 					if err != nil {
 						continue //@TODO log it
 					}
@@ -77,7 +76,7 @@ func (r *RouteService) GetDestinationsByRoute(ctx context.Context, loc location.
 					s = append(s, sender)
 				}
 				return s
-			}(route.GetWaysIds())
+			}(route.GetWays())
 			//Add to destinations
 			destinations = append(destinations, r.MakeDestination(route.GetDestination(), senders...))
 		}
@@ -91,14 +90,12 @@ func (r *RouteService) GetDestinationsForDirectMessage(ctx context.Context, locs
 	var destinations = make([]Destination, 0)
 	//Range message's destinations
 	for _, loc := range locs {
-		//Get ways by names and convert them to route's destinations
-		for _, wayName := range loc.GetWays() {
-			sender, err := r.wayService.GetSenderByName(ctx, wayName)
-			if err != nil {
-				return destinations, fmt.Errorf(`%w %s`, ErrUnknownSender, wayName)
-			}
-			destinations = append(destinations, r.MakeDestination(loc.GetProfile(), sender))
+		//Get way by name and convert it to route's destinations
+		sender, err := r.wayService.GetSenderByName(ctx, loc.GetWay())
+		if err != nil {
+			return destinations, fmt.Errorf(`%w %s`, ErrUnknownSender, loc.GetWay())
 		}
+		destinations = append(destinations, r.MakeDestination(loc.GetProfile(), sender))
 	}
 	return destinations, nil
 }
@@ -113,12 +110,12 @@ func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, d
 	return r.routeRepository.CreateRoute(ctx, &model.Route{
 		Source:      source,
 		Destination: destination,
-		WaysIds: func(senders []way.Sender) []uuid.UUID {
-			var ids = make([]uuid.UUID, len(senders))
+		Ways: func(senders []way.Sender) []string {
+			var ways = make([]string, len(senders))
 			for i, sender := range senders {
-				ids[i] = sender.GetId()
+				ways[i] = sender.GetName()
 			}
-			return ids
+			return ways
 		}(senders),
 	})
 }

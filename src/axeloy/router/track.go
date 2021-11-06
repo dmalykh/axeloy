@@ -15,7 +15,7 @@ const (
 
 type Track interface {
 	GetId() uuid.UUID
-	GetSenderId() uuid.UUID
+	GetSenderName() string
 	GetMessageId() uuid.UUID
 	GetProfile() profile.Profile
 	GetAttempts() int
