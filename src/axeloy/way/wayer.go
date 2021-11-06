@@ -2,35 +2,37 @@ package way
 
 import (
 	"context"
-	"github.com/dmalykh/axeloy/axeloy/core"
 	"github.com/dmalykh/axeloy/axeloy/message"
-	"github.com/dmalykh/axeloy/axeloy/profile"
-	"github.com/dmalykh/axeloy/axeloy/way/model"
-	"github.com/google/uuid"
+	"github.com/dmalykh/axeloy/axeloy/way/driver"
 )
 
+//type WayId string
+
 type Way interface {
-	core.Identitable
-	ValidateProfile(ctx context.Context, profile profile.Profile) (map[string]string, error)
-	SetParams(params model.Params)
-	//GetRequiredFields() []string
-	Stop() error
+	// GetId returns id. Same as GetName() method
+	//GetId() WayId
+
+	// GetName returns unique name of way
+	GetName() string
+
+	// GetTitle returns title of way
+	GetTitle() string
 }
 
 type Sender interface {
 	Way
-	Send(ctx context.Context, profile profile.Profile, message message.Message) ([]string, error)
+	driver.Sender
 }
 
 type Listener interface {
 	Way
-	Listen(context.Context, func(ctx context.Context, message message.Message) error) error
+	driver.Listener
 }
 
 type Wayer interface {
 	GetAvailableListeners(ctx context.Context) ([]Listener, error)
 	GetSenderByName(ctx context.Context, name string) (Sender, error)
-	GetSenderById(ctx context.Context, id uuid.UUID) (Sender, error)
+	//GetSenderById(ctx context.Context, id uuid.UUID) (Sender, error)
 
 	//The RunListeners starts listen all available listeners.
 	RunListeners(ctx context.Context, handler func(ctx context.Context, message message.Message) error) error

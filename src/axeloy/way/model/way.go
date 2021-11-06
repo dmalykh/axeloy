@@ -1,15 +1,14 @@
 package model
 
 import (
+	"github.com/dmalykh/axeloy/axeloy/way/driver"
 	"github.com/google/uuid"
 )
 
 type WayType string
 
-const Listener WayType = "listener"
-const Sender WayType = "sender"
-
-type Params map[string]string
+const WayTypeListener WayType = "listener"
+const WayTypeSender WayType = "sender"
 
 type Way struct {
 	Id         uuid.UUID
@@ -17,7 +16,7 @@ type Way struct {
 	Title      string
 	Type       WayType
 	DriverName string
-	Params     Params
+	Params     driver.Params
 }
 
 func (w *Way) GetId() uuid.UUID {
@@ -32,7 +31,7 @@ func (w *Way) GetDriverName() string {
 	return w.DriverName
 }
 
-func (w *Way) GetParams() Params {
+func (w *Way) GetParams() driver.Params {
 	return w.Params
 }
 

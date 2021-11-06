@@ -1,7 +1,9 @@
-package way
+package service
 
 import (
 	"context"
+	"github.com/dmalykh/axeloy/axeloy/way"
+	"github.com/dmalykh/axeloy/axeloy/way/driver"
 	"github.com/dmalykh/axeloy/axeloy/way/repository"
 	"reflect"
 	"testing"
@@ -10,7 +12,7 @@ import (
 func TestWayService_GetAvailableListeners(t *testing.T) {
 	type fields struct {
 		wayRepository repository.WayRepository
-		drivers       drivers
+		drivers       driver.Drivers
 	}
 	type args struct {
 		ctx context.Context
@@ -19,7 +21,7 @@ func TestWayService_GetAvailableListeners(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []Listener
+		want    []way.Listener
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -45,7 +47,7 @@ func TestWayService_GetAvailableListeners(t *testing.T) {
 func TestWayService_GetSenderByName(t *testing.T) {
 	type fields struct {
 		wayRepository repository.WayRepository
-		drivers       drivers
+		drivers       driver.Drivers
 	}
 	type args struct {
 		ctx  context.Context
@@ -55,7 +57,7 @@ func TestWayService_GetSenderByName(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    Sender
+		want    way.Sender
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -81,16 +83,13 @@ func TestWayService_GetSenderByName(t *testing.T) {
 func TestWayService_load(t *testing.T) {
 	type fields struct {
 		wayRepository repository.WayRepository
-		drivers       drivers
+		drivers       driver.Drivers
 	}
-	type args struct {
-		ctx    context.Context
-		config Config
-	}
+
 	tests := []struct {
 		name    string
 		fields  fields
-		args    args
+		config  *Config
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -101,7 +100,7 @@ func TestWayService_load(t *testing.T) {
 				wayRepository: tt.fields.wayRepository,
 				drivers:       tt.fields.drivers,
 			}
-			if err := w.load(tt.args.ctx, tt.args.config); (err != nil) != tt.wantErr {
+			if err := w.load(tt.config); (err != nil) != tt.wantErr {
 				t.Errorf("load() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

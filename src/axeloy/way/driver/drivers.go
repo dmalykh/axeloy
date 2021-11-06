@@ -1,4 +1,4 @@
-package way
+package driver
 
 import (
 	"errors"
@@ -11,34 +11,29 @@ var (
 	ErrDriverNameExists      = errors.New(`driver name already exists`)
 )
 
-type DriverConfig struct {
-	DriverPath string
-	Params     map[string]interface{}
-}
-
 //Repository for drivers
-type drivers struct {
+type Drivers struct {
 	listeners map[string]Listener
 	senders   map[string]Sender
 }
 
-func (d *drivers) GetListener(name string) (Listener, error) {
-	driver, ok := d.listeners[name]
+func (d *Drivers) GetListener(name string) (Listener, error) {
+	listener, ok := d.listeners[name]
 	if !ok {
 		return nil, fmt.Errorf(`%w %s`, ErrUnknownListenerDriver, name)
 	}
-	return driver, nil
+	return listener, nil
 }
 
-func (d *drivers) GetSender(name string) (Sender, error) {
-	driver, ok := d.senders[name]
+func (d *Drivers) GetSender(name string) (Sender, error) {
+	sender, ok := d.senders[name]
 	if !ok {
 		return nil, fmt.Errorf(`%w %s`, ErrUnknownSenderDriver, name)
 	}
-	return driver, nil
+	return sender, nil
 }
 
-func (d *drivers) RegistryListener(name string, listener Listener) error {
+func (d *Drivers) RegistryListener(name string, listener Listener) error {
 	if _, exists := d.listeners[name]; exists {
 		return fmt.Errorf(`%s %w`, name, ErrDriverNameExists)
 	}
@@ -46,7 +41,7 @@ func (d *drivers) RegistryListener(name string, listener Listener) error {
 	return nil
 }
 
-func (d *drivers) RegistrySender(name string, sender Sender) error {
+func (d *Drivers) RegistrySender(name string, sender Sender) error {
 	if _, exists := d.senders[name]; exists {
 		return fmt.Errorf(`%s %w`, name, ErrDriverNameExists)
 	}
