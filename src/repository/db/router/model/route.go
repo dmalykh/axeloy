@@ -8,6 +8,5 @@ import (
 
 //reform:route_route
 type Route struct {
-	Id     uuid.UUID `reform:"id,pk"`
-	Status string
+	Id uuid.UUID `reform:"id,pk"`
 }

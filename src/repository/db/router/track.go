@@ -51,7 +51,7 @@ func (t *TrackRepository) CreateTrack(ctx context.Context, tracks ...*model.Trac
 	for i, track := range tracks {
 		dbtracks[i] = &dbmodel.Track{
 			Id:        uuid.New(),
-			WayId:     track.GetSenderId(),
+			WayName:   track.GetSenderName(),
 			MessageId: track.GetMessageId(),
 			Attempts:  0,
 			Status:    string(track.GetStatus()), //@TODO: возможно, неправильно из интерфейса статус брать

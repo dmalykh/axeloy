@@ -83,7 +83,7 @@ func (r *RouteRepository) GetBySourceProfile(ctx context.Context, p profile.Prof
 	var query = fmt.Sprintf(`SELECT %s FROM %s INNER JOIN %s ON (%s.%s = %s.%s) WHERE %s `,
 		strings.Join([]string{
 			dbmodel.WayTable.Name() + "." + r.db.QuoteIdentifier(`route_id`),
-			dbmodel.WayTable.Name() + "." + r.db.QuoteIdentifier(`way_id`),
+			dbmodel.WayTable.Name() + "." + r.db.QuoteIdentifier(`way_name`),
 			dbmodel.ProfileTable.Name() + "." + r.db.QuoteIdentifier(`key`),
 			dbmodel.ProfileTable.Name() + "." + r.db.QuoteIdentifier(`value`),
 		}, ", "),
@@ -105,25 +105,26 @@ func (r *RouteRepository) GetBySourceProfile(ctx context.Context, p profile.Prof
 
 	type tempData struct {
 		RouteId uuid.UUID
-		WayId   uuid.UUID
+		WayName string
 		Key     string
 		Value   string
 	}
+
 	//Fetch and collect profile fields
-	var ways = make(map[uuid.UUID][]uuid.UUID)
+	var ways = make(map[uuid.UUID][]string)
 	var profileFields = make(map[uuid.UUID]map[string][]string)
 	for rows.Next() {
 		var temp tempData
-		if err = rows.Scan(&temp.RouteId, &temp.WayId, &temp.Key, &temp.Value); err != nil {
+		if err = rows.Scan(&temp.RouteId, &temp.WayName, &temp.Key, &temp.Value); err != nil {
 			log.Print(err) //@TODO
 		}
 		//Create slices if route doesn't exists
 		if _, exists := profileFields[temp.RouteId]; !exists {
 			profileFields[temp.RouteId] = make(map[string][]string)
-			ways[temp.RouteId] = make([]uuid.UUID, 0)
+			ways[temp.RouteId] = make([]string, 0)
 		}
 		//Collect ways
-		ways[temp.RouteId] = append(ways[temp.RouteId], temp.WayId)
+		ways[temp.RouteId] = append(ways[temp.RouteId], temp.WayName)
 
 		//Collect fields for profile
 		if _, exists := profileFields[temp.RouteId][temp.Key]; !exists {
@@ -141,7 +142,7 @@ func (r *RouteRepository) GetBySourceProfile(ctx context.Context, p profile.Prof
 			Destination: &profilemodel.Profile{
 				Fields: fields,
 			},
-			WaysIds: ways[id],
+			Ways: ways[id],
 		})
 	}
 	return routes, nil
@@ -182,7 +183,7 @@ func (r *RouteRepository) CreateRoute(ctx context.Context, routes ...*model.Rout
 		}
 
 		//Save ways
-		if err := r.createWays(tx, routeId, route.GetWaysIds()); err != nil {
+		if err := r.createWays(tx, routeId, route.GetWays()); err != nil {
 			if err := tx.Rollback(); err != nil {
 				return fmt.Errorf(`%w, rollback error %s`, ErrCreateWays, err.Error())
 			}
@@ -215,12 +216,12 @@ func (r *RouteRepository) createProfile(tx *reform.TX, routeId uuid.UUID, kind d
 	return tx.InsertMulti(profiles...)
 }
 
-func (r *RouteRepository) createWays(tx *reform.TX, routeId uuid.UUID, senders []uuid.UUID) error {
+func (r *RouteRepository) createWays(tx *reform.TX, routeId uuid.UUID, senders []string) error {
 	var ways = make([]reform.Struct, len(senders))
-	for i, wid := range senders {
+	for i, wayName := range senders {
 		ways[i] = &dbmodel.Way{
 			RouteId: routeId,
-			WayId:   wid,
+			WayName: wayName,
 		}
 	}
 	return tx.InsertMulti(ways...)
