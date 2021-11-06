@@ -25,6 +25,14 @@ type Message struct {
 	Status      Status
 }
 
+func (m *Message) GetId() uuid.UUID {
+	return m.Id
+}
+
+func (m *Message) SetId(u uuid.UUID) {
+	m.Id = u
+}
+
 func (m *Message) GetStatus() Status {
 	return m.Status
 }
@@ -43,10 +51,6 @@ func (m *Message) GetStatus() Status {
 
 func (m *Message) GetPayload() payload.Payload {
 	return m.Payload
-}
-
-func (m *Message) GetUUID() uuid.UUID {
-	return m.Id
 }
 
 func (m *Message) GetSource() location.Location {

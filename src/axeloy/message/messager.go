@@ -19,7 +19,8 @@ import (
 //)
 
 type Message interface {
-	GetUUID() uuid.UUID
+	GetId() uuid.UUID
+	SetId(u uuid.UUID)
 	GetSource() location.Location
 	GetDestinations() []location.Location
 	GetPayload() payload.Payload
