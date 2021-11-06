@@ -21,7 +21,7 @@ type Message struct {
 	Payload     payload.Payload
 	Source      location.Location
 	Destination []location.Location
-	Info        []string
+	Info        string
 	Status      Status
 }
 
@@ -29,17 +29,17 @@ func (m *Message) GetStatus() Status {
 	return m.Status
 }
 
-func (m *Message) GetInfo() []string {
-	return m.Info
-}
-
-func (m *Message) SetInfo(info ...string) {
-	m.Info = info
-}
-
-func (m *Message) AddInfo(info ...string) {
-	m.Info = append(m.Info, info...)
-}
+//func (m *Message) GetInfo() []string {
+//	return m.Info
+//}
+//
+//func (m *Message) SetInfo(info ...string) {
+//	m.Info = info
+//}
+//
+//func (m *Message) AddInfo(info ...string) {
+//	m.Info = append(m.Info, info...)
+//}
 
 func (m *Message) GetPayload() payload.Payload {
 	return m.Payload

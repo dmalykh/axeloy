@@ -1,3 +1,3 @@
 package payload
 
-type Payload map[string]interface{}
+type Payload map[string][]string

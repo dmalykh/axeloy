@@ -18,20 +18,16 @@ var (
 )
 
 func NewMessager(messageRepository repository.MessageRepository) message.Messager {
-	return &MessageSevice{
+	return &MessageService{
 		messageRepository: messageRepository,
 	}
 }
 
-type MessageSevice struct {
+type MessageService struct {
 	messageRepository repository.MessageRepository
 }
 
-func (m *MessageSevice) Update(ctx context.Context, msg message.Message) error {
-	panic("implement me")
-}
-
-func (m *MessageSevice) GetById(ctx context.Context, id uuid.UUID) (message.Message, error) {
+func (m *MessageService) GetById(ctx context.Context, id uuid.UUID) (message.Message, error) {
 	msg, err := m.messageRepository.GetById(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNoMessage) {
@@ -42,14 +38,14 @@ func (m *MessageSevice) GetById(ctx context.Context, id uuid.UUID) (message.Mess
 	return msg, nil
 }
 
-func (m *MessageSevice) Add(ctx context.Context, msg message.Message) error {
+func (m *MessageService) Add(ctx context.Context, msg message.Message) error {
 	if err := m.messageRepository.Create(ctx, msg); err != nil {
 		return fmt.Errorf(`%w %s`, ErrAddMessage, err.Error())
 	}
 	return nil
 }
 
-func (m *MessageSevice) UpdateStatus(ctx context.Context, msg message.Message, status model.Status, info ...string) error {
+func (m *MessageService) UpdateStatus(ctx context.Context, msg message.Message, status model.Status, info ...string) error {
 	if err := m.messageRepository.UpdateStatus(ctx, msg.GetUUID(), status, info...); err != nil {
 		return fmt.Errorf(`%w (%s) %s`, ErrUpdateStatus, status, err.Error())
 	}
@@ -67,7 +63,7 @@ func (m *MessageSevice) UpdateStatus(ctx context.Context, msg message.Message, s
 //	return err
 //}
 //
-//func (m *MessageSevice) convertStateToStatus(state State) (model.Status, error) {
+//func (m *MessageService) convertStateToStatus(state State) (model.Status, error) {
 //	switch state {
 //	case StateProcessed:
 //		return model.StatusProcessed, nil

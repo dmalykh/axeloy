@@ -24,14 +24,13 @@ type Message interface {
 	GetDestinations() []location.Location
 	GetPayload() payload.Payload
 	GetStatus() model.Status
-	GetInfo() []string
-	SetInfo(info ...string)
-	AddInfo(info ...string)
+	//GetInfo() []string
+	//SetInfo(info ...string)
+	//AddInfo(info ...string)
 }
 
 type Messager interface {
 	GetById(ctx context.Context, id uuid.UUID) (Message, error)
 	Add(ctx context.Context, msg Message) error
-	Update(ctx context.Context, msg Message) error
 	UpdateStatus(ctx context.Context, msg Message, status model.Status, info ...string) error
 }
