@@ -1,9 +1,11 @@
 package model
 
+import "github.com/dmalykh/axeloy/axeloy/profile"
+
 type Profile struct {
-	Fields map[string][]string
+	Fields profile.Fields
 }
 
-func (p *Profile) GetFields() map[string][]string {
+func (p *Profile) GetFields() profile.Fields {
 	return p.Fields
 }

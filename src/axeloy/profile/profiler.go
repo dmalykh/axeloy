@@ -1,5 +1,7 @@
 package profile
 
+type Fields map[string][]string
+
 type Profile interface {
-	GetFields() map[string][]string
+	GetFields() Fields
 }
