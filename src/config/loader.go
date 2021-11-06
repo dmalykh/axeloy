@@ -11,8 +11,8 @@ type Config struct {
 	} `yaml:"database"`
 	Ways struct {
 		Drivers map[string]struct {
-			DriverPath string                 `yaml:"path"`
-			Params     map[string]interface{} `yaml:"params"`
+			DriverPath   string      `yaml:"path"`
+			DriverConfig interface{} `yaml:"config"`
 		} `yaml:"drivers"`
 	} `yaml:"ways"`
 }
