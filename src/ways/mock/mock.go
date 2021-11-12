@@ -2,29 +2,27 @@ package main
 
 import (
 	"context"
-	"github.com/dmalykh/axeloy/axeloy/message"
 	"github.com/dmalykh/axeloy/axeloy/profile"
-	"github.com/dmalykh/axeloy/axeloy/way/model"
-	"github.com/google/uuid"
+	"github.com/dmalykh/axeloy/axeloy/way/driver"
 )
 
-type MockWay struct {
+type MockDriver struct {
 }
 
-func (m *MockWay) SetParams(params model.Params) {
+func (m *MockDriver) ValidateProfile(ctx context.Context, p profile.Profile) (map[string]string, error) {
 	panic("implement me")
 }
 
-func (m *MockWay) GetId() uuid.UUID {
+func (m *MockDriver) SetWayParams(params driver.Params) {
 	panic("implement me")
 }
 
-func (m *MockWay) ValidateProfile(ctx context.Context, profile profile.Profile) error {
+func (m *MockDriver) SetConfig(config driver.DriverConfig) {
 	panic("implement me")
 }
 
-func (m *MockWay) Listen(ctx context.Context, f func(ctx context.Context, message message.Message) error) error {
+func (m *MockDriver) Stop() error {
 	panic("implement me")
 }
 
-var Mock MockWay
+var Driver MockDriver

@@ -70,7 +70,7 @@ func (r *RouteService) GetDestinationsByRoute(ctx context.Context, loc location.
 					if err != nil {
 						continue //@TODO log it
 					}
-					if _, err := sender.ValidateProfile(ctx, route.GetDestination()); err != nil {
+					if err := sender.ValidateProfile(ctx, route.GetDestination()); err != nil {
 						continue //@TODO log error
 					}
 					s = append(s, sender)
@@ -102,11 +102,11 @@ func (r *RouteService) GetDestinationsForDirectMessage(ctx context.Context, locs
 
 func (r *RouteService) ApplyRoute(ctx context.Context, source profile.Profile, destination profile.Profile, senders ...way.Sender) error {
 	//@TODO: Check for exists route and validate ways with profile
-	//for _, s := range senders {
-	//	if err := s.ValidateProfile(ctx, destination); err != nil {
-	//		return fmt.Errorf(`%w %s`, ErrNotValidProfile, err.Error())
-	//	}
-	//}
+	for _, s := range senders {
+		if err := s.ValidateProfile(ctx, destination); err != nil {
+			return fmt.Errorf(`%w %s`, ErrNotValidProfile, err.Error())
+		}
+	}
 	return r.routeRepository.CreateRoute(ctx, &model.Route{
 		Source:      source,
 		Destination: destination,

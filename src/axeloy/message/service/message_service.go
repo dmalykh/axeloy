@@ -46,7 +46,7 @@ func (m *MessageService) Add(ctx context.Context, msg message.Message) error {
 }
 
 func (m *MessageService) UpdateStatus(ctx context.Context, msg message.Message, status model.Status, info ...string) error {
-	if err := m.messageRepository.UpdateStatus(ctx, msg.GetUUID(), status, info...); err != nil {
+	if err := m.messageRepository.UpdateStatus(ctx, msg.GetId(), status, info...); err != nil {
 		return fmt.Errorf(`%w (%s) %s`, ErrUpdateStatus, status, err.Error())
 	}
 	return nil

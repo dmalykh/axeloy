@@ -55,20 +55,6 @@ func (_m *Messager) GetById(ctx context.Context, id uuid.UUID) (message.Message,
 	return r0, r1
 }
 
-// Update provides a mock function with given fields: ctx, msg
-func (_m *Messager) Update(ctx context.Context, msg message.Message) error {
-	ret := _m.Called(ctx, msg)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, message.Message) error); ok {
-		r0 = rf(ctx, msg)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // UpdateStatus provides a mock function with given fields: ctx, msg, status, info
 func (_m *Messager) UpdateStatus(ctx context.Context, msg message.Message, status model.Status, info ...string) error {
 	_va := make([]interface{}, len(info))

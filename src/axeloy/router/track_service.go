@@ -2,7 +2,6 @@ package router
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/dmalykh/axeloy/axeloy/message"
@@ -39,19 +38,15 @@ func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, dest
 	for _, w := range destination.GetWays(ctx) {
 		var track = &model.Track{
 			SenderName: w.GetName(),
-			MessageId:  m.GetUUID(),
+			MessageId:  m.GetId(),
 			Attempts:   0,
 			Profile:    destination.GetProfile(ctx),
 			Status:     model.Planned,
 		}
 		//Validate, if no errors — return
-		errinfo, err := w.ValidateProfile(ctx, destination.GetProfile(ctx))
-		if err != nil {
+		if err := w.ValidateProfile(ctx, destination.GetProfile(ctx)); err != nil {
 			track.Status = model.Error
-			track.Info = func(info map[string]string) string {
-				data, _ := json.Marshal(info)
-				return string(data)
-			}(errinfo)
+			track.Info = err.Error()
 		} else {
 			plannedTracks = append(plannedTracks, track)
 		}
@@ -72,7 +67,7 @@ func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, dest
 //}
 
 func (t *TrackService) GetUnsentTracks(ctx context.Context) ([]Track, error) {
-	panic("implement me")
+	t.trackRepository.GetByStatus(ctx, model.AttemptStatusError)
 }
 
 func (t *TrackService) Send(ctx context.Context, track Track) error {

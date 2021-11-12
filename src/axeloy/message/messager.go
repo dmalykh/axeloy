@@ -25,7 +25,7 @@ type Message interface {
 	GetDestinations() []location.Location
 	GetPayload() payload.Payload
 	GetStatus() model.Status
-	//GetInfo() []string
+	GetInfo() []string
 	//SetInfo(info ...string)
 	//AddInfo(info ...string)
 }

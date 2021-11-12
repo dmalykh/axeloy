@@ -22,12 +22,7 @@ type WayService struct {
 	listeners map[string]way.Listener
 }
 
-type Config struct {
-	WayRepository repository.WayRepository
-	Drivers       map[string]driver.Config
-}
-
-func NewService(ctx context.Context, config *Config) (*WayService, error) {
+func NewService(ctx context.Context, config *way.Config) (*WayService, error) {
 	var service = &WayService{
 		wayRepository: config.WayRepository,
 	}
@@ -42,7 +37,7 @@ var (
 	ErrNotImplementAnyOfWaysInterfaces = errors.New(`doesn't implements any of ways interfaces`)
 )
 
-func (w *WayService) GetSenderByName(ctx context.Context, name string) (driver.Sender, error) {
+func (w *WayService) GetSenderByName(ctx context.Context, name string) (way.Sender, error) {
 	way, err := w.wayRepository.GetByName(ctx, name)
 	if err != nil {
 		return nil, fmt.Errorf(`%s %w`, name, ErrNoWayName)
@@ -67,7 +62,7 @@ func (w *WayService) GetSenderByName(ctx context.Context, name string) (driver.S
 //}
 
 // The function loads ways from configuration.
-func (w *WayService) load(config *Config) error {
+func (w *WayService) load(config *way.Config) error {
 	for name, driverConfig := range config.Drivers {
 		plug, err := plugin.Open(driverConfig.Path)
 		if err != nil {
@@ -141,7 +136,7 @@ func (w *WayService) RunListener(ctx context.Context, listener way.Listener, han
 		//Create message
 		var msg = &messagemodel.Message{
 			Payload: m.GetPayload(),
-			Source: messagemodel.Location{
+			Source: &messagemodel.Location{
 				Way: listener.GetName(),
 				Profile: &profilemodel.Profile{
 					Fields: m.GetPublisher(),

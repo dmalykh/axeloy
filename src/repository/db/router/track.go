@@ -28,7 +28,7 @@ type TrackRepository struct {
 }
 
 func (t *TrackRepository) GetTracksByMessageId(ctx context.Context, messageId uuid.UUID) ([]*model.Track, error) {
-	panic("implement me")
+	panic("implement me") //@TODO
 }
 
 func NewTrackRepository(db *reform.DB) *TrackRepository {
@@ -71,7 +71,7 @@ func (t *TrackRepository) SetStatus(ctx context.Context, id uuid.UUID, status mo
 		&dbmodel.Track{
 			Id:     id,
 			Status: string(status),
-			Info:   strings.Join(info, "\n"),
+			Info:   strings.Join(info, "\t"),
 		}, `status`); err != nil {
 		if errors.Is(err, reform.ErrNoPK) {
 			return fmt.Errorf(`%s %w %s`, id.String(), ErrUnknownTrack, err.Error())
@@ -108,7 +108,7 @@ func (t *TrackRepository) FinishAttempt(ctx context.Context, attempt *model.Atte
 		&dbmodel.Attempt{
 			Id:     attempt.Id,
 			Status: t.attemptStatusToStr(attempt.Status),
-			Info:   strings.Join(info, "\n"),
+			Info:   strings.Join(info, "\t"),
 		}, `status`); err != nil {
 		if errors.Is(err, reform.ErrNoPK) {
 			return fmt.Errorf(`%s %w %s`, attempt.Id.String(), ErrUnknownAttempt, err.Error())

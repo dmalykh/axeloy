@@ -8,8 +8,6 @@ import (
 	message "github.com/dmalykh/axeloy/axeloy/message"
 	mock "github.com/stretchr/testify/mock"
 
-	uuid "github.com/google/uuid"
-
 	way "github.com/dmalykh/axeloy/axeloy/way"
 )
 
@@ -34,29 +32,6 @@ func (_m *Wayer) GetAvailableListeners(ctx context.Context) ([]way.Listener, err
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetSenderById provides a mock function with given fields: ctx, id
-func (_m *Wayer) GetSenderById(ctx context.Context, id uuid.UUID) (way.Sender, error) {
-	ret := _m.Called(ctx, id)
-
-	var r0 way.Sender
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) way.Sender); ok {
-		r0 = rf(ctx, id)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(way.Sender)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}

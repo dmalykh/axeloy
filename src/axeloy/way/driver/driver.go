@@ -20,7 +20,7 @@ type Config struct {
 
 type Driver interface {
 	//The ValidateProfile method validates profile when route is created and before message been sent
-	ValidateProfile(ctx context.Context, p profile.Profile) (map[string]string, error)
+	ValidateProfile(ctx context.Context, p profile.Profile) error
 	SetWayParams(params Params)
 	// SetConfig sets config for driver when app starts and driver loads
 	SetConfig(config DriverConfig)

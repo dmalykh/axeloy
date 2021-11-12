@@ -12,6 +12,7 @@ import (
 	"gopkg.in/reform.v1"
 	"log"
 	"strings"
+	"time"
 )
 
 var ErrCreateRoute = errors.New(`can't insert route`)
@@ -158,7 +159,7 @@ func (r *RouteRepository) CreateRoute(ctx context.Context, routes ...*model.Rout
 	}
 
 	for _, route := range routes {
-		//CreateRoute route @TODO: а нужна ли вообще эта таблица из одной колонки?
+		//Create route
 		if err := r.createRoute(tx, routeId); err != nil {
 			if err := tx.Rollback(); err != nil {
 				return fmt.Errorf(`%w %s, rollback error %s`, ErrCreateRoute, routeId.String(), err.Error())
@@ -196,7 +197,8 @@ func (r *RouteRepository) CreateRoute(ctx context.Context, routes ...*model.Rout
 
 func (r *RouteRepository) createRoute(tx *reform.TX, routeId uuid.UUID) error {
 	return tx.Insert(&dbmodel.Route{
-		Id: routeId,
+		Id:        routeId,
+		CreatedAt: time.Now(),
 	})
 }
 

@@ -1,3 +1,10 @@
+Commandline interface description
+
+axeloy new [migration|driver] name
+axeloy run --config=[path]
+axeloy migrate --
+
+
 channel могут быть входящие, могут быть исходящие.
 route маршрут по которому сообщение будет идти дальше
 
