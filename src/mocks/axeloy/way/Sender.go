@@ -94,24 +94,15 @@ func (_m *Sender) Stop() error {
 }
 
 // ValidateProfile provides a mock function with given fields: ctx, p
-func (_m *Sender) ValidateProfile(ctx context.Context, p profile.Profile) (map[string]string, error) {
+func (_m *Sender) ValidateProfile(ctx context.Context, p profile.Profile) error {
 	ret := _m.Called(ctx, p)
 
-	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(context.Context, profile.Profile) map[string]string); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, profile.Profile) error); ok {
 		r0 = rf(ctx, p)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]string)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, profile.Profile) error); ok {
-		r1 = rf(ctx, p)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }

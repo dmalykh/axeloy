@@ -55,20 +55,20 @@ func (_m *MessageRepository) GetById(ctx context.Context, id uuid.UUID) (*model.
 	return r0, r1
 }
 
-// UpdateStatus provides a mock function with given fields: ctx, getUUID, status, info
-func (_m *MessageRepository) UpdateStatus(ctx context.Context, getUUID uuid.UUID, status model.Status, info ...string) error {
+// UpdateStatus provides a mock function with given fields: ctx, id, status, info
+func (_m *MessageRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status model.Status, info ...string) error {
 	_va := make([]interface{}, len(info))
 	for _i := range info {
 		_va[_i] = info[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, getUUID, status)
+	_ca = append(_ca, ctx, id, status)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, model.Status, ...string) error); ok {
-		r0 = rf(ctx, getUUID, status, info...)
+		r0 = rf(ctx, id, status, info...)
 	} else {
 		r0 = ret.Error(0)
 	}

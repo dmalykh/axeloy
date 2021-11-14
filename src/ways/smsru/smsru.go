@@ -6,8 +6,6 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/way/driver"
 	"github.com/go-ozzo/ozzo-validation/v4"
-	"net/http"
-	"strings"
 )
 
 type Config struct {
@@ -56,9 +54,10 @@ func (s *SmsRu) Send(ctx context.Context, recipient profile.Profile, message mes
 	if err := profile.Unmarshal(recipient, &sms); err != nil {
 
 	}
-	sms.text = strings.NewReplacer().Replace(s.)
-
-	http.Post(s.url, ``, sms)
+	return nil, nil
+	//sms.text = strings.NewReplacer().Replace(s.)
+	//
+	//http.Post(s.url, ``, sms)
 }
 
 var Driver SmsRu

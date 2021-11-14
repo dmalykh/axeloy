@@ -1,6 +1,8 @@
 ways.build:
 	DIR="$$(pwd)/src/ways"; \
 	for name in `ls -1 $$DIR`; do (cd "$$DIR/$$name" && bash -c "go build -buildmode=plugin -o $$name.so $$name.go"); done
+
+
 mocks:
 	 (cd src && mockery --all --keeptree)
 
@@ -10,6 +12,7 @@ db.reform.gen:
 		(cd "$$DIR/$$name" && bash -c "go generate model/*.go");\
   	done
 	#(cd src/repository/db && go generate */model/*.go )
+
 
  db.migration.new:
 	 @echo "Hi $@" \

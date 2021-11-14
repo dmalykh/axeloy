@@ -19,17 +19,6 @@ type Message struct {
 	mock.Mock
 }
 
-// AddInfo provides a mock function with given fields: info
-func (_m *Message) AddInfo(info ...string) {
-	_va := make([]interface{}, len(info))
-	for _i := range info {
-		_va[_i] = info[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, _va...)
-	_m.Called(_ca...)
-}
-
 // GetDestinations provides a mock function with given fields:
 func (_m *Message) GetDestinations() []location.Location {
 	ret := _m.Called()
@@ -40,6 +29,22 @@ func (_m *Message) GetDestinations() []location.Location {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]location.Location)
+		}
+	}
+
+	return r0
+}
+
+// GetId provides a mock function with given fields:
+func (_m *Message) GetId() uuid.UUID {
+	ret := _m.Called()
+
+	var r0 uuid.UUID
+	if rf, ok := ret.Get(0).(func() uuid.UUID); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(uuid.UUID)
 		}
 	}
 
@@ -108,29 +113,7 @@ func (_m *Message) GetStatus() model.Status {
 	return r0
 }
 
-// GetUUID provides a mock function with given fields:
-func (_m *Message) GetUUID() uuid.UUID {
-	ret := _m.Called()
-
-	var r0 uuid.UUID
-	if rf, ok := ret.Get(0).(func() uuid.UUID); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(uuid.UUID)
-		}
-	}
-
-	return r0
-}
-
-// SetInfo provides a mock function with given fields: info
-func (_m *Message) SetInfo(info ...string) {
-	_va := make([]interface{}, len(info))
-	for _i := range info {
-		_va[_i] = info[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, _va...)
-	_m.Called(_ca...)
+// SetId provides a mock function with given fields: u
+func (_m *Message) SetId(u uuid.UUID) {
+	_m.Called(u)
 }

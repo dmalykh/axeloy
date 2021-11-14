@@ -16,7 +16,7 @@ require (
 	github.com/samsarahq/thunder v0.5.0
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	gopkg.in/reform.v1 v1.5.1
-	gopkg.in/yaml.v2 v2.2.2
 )

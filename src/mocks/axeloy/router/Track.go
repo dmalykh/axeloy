@@ -77,17 +77,15 @@ func (_m *Track) GetProfile() profile.Profile {
 	return r0
 }
 
-// GetSenderId provides a mock function with given fields:
-func (_m *Track) GetSenderId() uuid.UUID {
+// GetSenderName provides a mock function with given fields:
+func (_m *Track) GetSenderName() string {
 	ret := _m.Called()
 
-	var r0 uuid.UUID
-	if rf, ok := ret.Get(0).(func() uuid.UUID); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
 		r0 = rf()
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(uuid.UUID)
-		}
+		r0 = ret.Get(0).(string)
 	}
 
 	return r0

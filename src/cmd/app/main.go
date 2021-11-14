@@ -25,7 +25,10 @@ var (
 	ErrDbConnection = errors.New(`can't connect database`)
 )
 
-func load(ctx context.Context, configPath string) (*axeloy.Axeloy, error) {
+type App struct {
+}
+
+func (a *App) Load(ctx context.Context, configPath string) (*axeloy.Axeloy, error) {
 	//Parse config
 	config, err := configuration.Load(configPath)
 	if err != nil {
@@ -76,7 +79,7 @@ func load(ctx context.Context, configPath string) (*axeloy.Axeloy, error) {
 }
 
 //Graceful shutdown https://play.golang.org/p/uBMCywO5O0w
-func newContext() context.Context {
+func (a *App) NewContext() context.Context {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
@@ -87,15 +90,4 @@ func newContext() context.Context {
 		cancel()
 	}()
 	return ctx
-}
-
-func main() {
-	var ctx = newContext()
-	ax, err := load(ctx, ``)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	if err := ax.Run(ctx); err != nil {
-		log.Fatalln(err.Error())
-	}
 }

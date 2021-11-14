@@ -67,7 +67,8 @@ func (t *TrackService) DefineTracks(ctx context.Context, m message.Message, dest
 //}
 
 func (t *TrackService) GetUnsentTracks(ctx context.Context) ([]Track, error) {
-	t.trackRepository.GetByStatus(ctx, model.AttemptStatusError)
+	//t.trackRepository.GetByStatus(ctx, model.AttemptStatusError)
+	return []Track{}, nil //@TODO
 }
 
 func (t *TrackService) Send(ctx context.Context, track Track) error {
