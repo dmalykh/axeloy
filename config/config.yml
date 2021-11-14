@@ -1,15 +1,15 @@
 database:
-  driver: "postgresql"
+  driver: "pgx"
   dsn: "postgre://name@pass:serv"
 ways:
   drivers:
     smsru:
-      path: "/var/www"
+      path: "ways/smsru/smsru.so"
       config:
         host: ""
         username: ""
         password: ""
     graphql:
-      path: ""
+      path: "ways/graphql/graphql.so"
       config:
         addr: ":3040"

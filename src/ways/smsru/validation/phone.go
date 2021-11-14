@@ -1,4 +1,4 @@
-package smsru
+package validation
 
 import (
 	"errors"

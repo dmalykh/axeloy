@@ -27,7 +27,7 @@ func Root() {
 					var ctx = a.NewContext()
 					ax, err := a.Load(ctx, c.String(`config`))
 					if err != nil {
-						return cli.Exit(fmt.Sprintf(`config loaiing error %s`, err.Error()), 9)
+						return cli.Exit(fmt.Sprintf(`config lodaing error %s`, err.Error()), 9)
 					}
 					return ax.Run(ctx)
 				},

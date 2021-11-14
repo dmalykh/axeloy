@@ -34,6 +34,7 @@ var (
 	ErrNoWayDriver                     = errors.New(`driver doesn't exists`)
 	ErrUnknownListener                 = errors.New(`can't receive listener`)
 	ErrStopListener                    = errors.New(`can't stop listener`)
+	ErrOpenPlugin                      = errors.New(`can't open plugin`)
 	ErrNotImplementAnyOfWaysInterfaces = errors.New(`doesn't implements any of ways interfaces`)
 )
 
@@ -66,7 +67,7 @@ func (w *WayService) load(config *way.Config) error {
 	for name, driverConfig := range config.Drivers {
 		plug, err := plugin.Open(driverConfig.Path)
 		if err != nil {
-			return err //@TODO
+			return fmt.Errorf(`%w "%s": %s`, ErrOpenPlugin, driverConfig.Path, err.Error())
 		}
 		d, err := plug.Lookup("Driver")
 		if err != nil {

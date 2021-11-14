@@ -23,6 +23,7 @@ import (
 var (
 	ErrParseConfig  = errors.New(`can't parse config`)
 	ErrDbConnection = errors.New(`can't connect database`)
+	ErrLoadDrivers  = errors.New(`can't load ways driver`)
 )
 
 type App struct {
@@ -54,7 +55,7 @@ func (a *App) Load(ctx context.Context, configPath string) (*axeloy.Axeloy, erro
 			var drivers = make(map[string]driver.Config)
 			for name, d := range config.Ways.Drivers {
 				drivers[name] = driver.Config{
-					Path:   d.DriverPath,
+					Path:   d.DriverPath, //@TODO use builtin drivers without path in config
 					Config: d.DriverConfig,
 				}
 			}
@@ -62,7 +63,7 @@ func (a *App) Load(ctx context.Context, configPath string) (*axeloy.Axeloy, erro
 		}(config),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`%w %s`, ErrLoadDrivers, err.Error())
 	}
 
 	//Load services

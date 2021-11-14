@@ -1,10 +1,11 @@
-package smsru
+package main
 
 import (
 	"context"
 	"github.com/dmalykh/axeloy/axeloy/message"
 	"github.com/dmalykh/axeloy/axeloy/profile"
 	"github.com/dmalykh/axeloy/axeloy/way/driver"
+	validation2 "github.com/dmalykh/axeloy/ways/smsru/validation"
 	"github.com/go-ozzo/ozzo-validation/v4"
 )
 
@@ -32,7 +33,7 @@ type params struct {
 func (s *SmsRu) ValidateProfile(ctx context.Context, p profile.Profile) error {
 	return validation.Validate(p,
 		validation.Map(
-			validation.Key("phone", validation.Required, IsPhoneNumber(s.defaultCountryCode, s.strictValidation)),
+			validation.Key("phone", validation.Required, validation2.IsPhoneNumber(s.defaultCountryCode, s.strictValidation)),
 		),
 	)
 }

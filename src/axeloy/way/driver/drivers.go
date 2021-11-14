@@ -34,6 +34,9 @@ func (d *Drivers) GetSender(name string) (Sender, error) {
 }
 
 func (d *Drivers) RegistryListener(name string, listener Listener) error {
+	if d.listeners == nil {
+		d.listeners = make(map[string]Listener)
+	}
 	if _, exists := d.listeners[name]; exists {
 		return fmt.Errorf(`%s %w`, name, ErrDriverNameExists)
 	}
@@ -42,6 +45,9 @@ func (d *Drivers) RegistryListener(name string, listener Listener) error {
 }
 
 func (d *Drivers) RegistrySender(name string, sender Sender) error {
+	if d.senders == nil {
+		d.senders = make(map[string]Sender)
+	}
 	if _, exists := d.senders[name]; exists {
 		return fmt.Errorf(`%s %w`, name, ErrDriverNameExists)
 	}
