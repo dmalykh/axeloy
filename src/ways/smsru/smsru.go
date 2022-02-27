@@ -42,7 +42,7 @@ func (s *SmsRu) SetWayParams(params driver.Params) {
 	s.params.text = params[`text`]
 }
 
-func (s *SmsRu) SetConfig(config driver.DriverConfig) {
+func (s *SmsRu) SetDriverConfig(config driver.DriverConfig) {
 	//@TODO configparser. driver.DriverConfig should be interface{}. config.Load(s, config)
 }
 

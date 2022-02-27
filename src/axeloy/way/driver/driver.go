@@ -9,7 +9,14 @@ import (
 
 var ErrStopped = errors.New(`service stopped`)
 
-type Params map[string]string
+type Params map[string][]string
+
+type ParamsField struct {
+	Name  string
+	Title string
+}
+
+type ParamsFields []ParamsField
 
 type DriverConfig interface{}
 
@@ -21,11 +28,13 @@ type Config struct {
 type Driver interface {
 	//The ValidateProfile method validates profile when route is created and before message been sent
 	ValidateProfile(ctx context.Context, p profile.Profile) error
+	// SetWayParams sets params  for driver from ways storage when driver loads
 	SetWayParams(params Params)
-	// SetConfig sets config for driver when app starts and driver loads
-	SetConfig(config DriverConfig)
-	//GetRequiredFields() []string
-	Stop() error
+	// GetWayParamsFields returns fields that describes params of way
+	GetWayParamsFields() ParamsFields
+	// SetDriverConfig sets config for driver when app starts
+	SetDriverConfig(config DriverConfig)
+	Stop(ctx context.Context) error
 }
 
 type Sender interface {

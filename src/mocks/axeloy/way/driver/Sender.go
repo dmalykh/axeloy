@@ -18,34 +18,6 @@ type Sender struct {
 	mock.Mock
 }
 
-// GetName provides a mock function with given fields:
-func (_m *Sender) GetName() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
-}
-
-// GetTitle provides a mock function with given fields:
-func (_m *Sender) GetTitle() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
-}
-
 // Send provides a mock function with given fields: ctx, recipient, _a2
 func (_m *Sender) Send(ctx context.Context, recipient profile.Profile, _a2 message.Message) ([]string, error) {
 	ret := _m.Called(ctx, recipient, _a2)

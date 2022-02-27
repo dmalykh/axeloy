@@ -76,7 +76,7 @@ func (w *WayService) load(config *way.Config) error {
 		//If driver is listener, register it
 		listener, canListen := d.(driver.Listener)
 		if canListen {
-			listener.SetConfig(driverConfig.Config)
+			listener.SetDriverConfig(driverConfig.Config)
 			if err := w.drivers.RegistryListener(name, listener); err != nil {
 				return err //@TODO
 			}
@@ -84,7 +84,7 @@ func (w *WayService) load(config *way.Config) error {
 		//If driver is sender, register it
 		sender, canSend := d.(driver.Sender)
 		if canSend {
-			sender.SetConfig(driverConfig.Config)
+			sender.SetDriverConfig(driverConfig.Config)
 			if err := w.drivers.RegistrySender(name, sender); err != nil {
 				return err //@TODO
 			}
@@ -121,7 +121,7 @@ func (w *WayService) StopListener(ctx context.Context, listener way.Listener) er
 	if _, exists := w.listeners[listener.GetName()]; !exists {
 		return fmt.Errorf(`%w %s`, ErrUnknownListener, listener.GetName())
 	}
-	if err := listener.Stop(); err != nil {
+	if err := listener.Stop(ctx); err != nil {
 		return fmt.Errorf(`%w %s %s`, ErrStopListener, listener.GetName(), err.Error())
 	}
 	delete(w.listeners, listener.GetName())

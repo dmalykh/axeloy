@@ -16,34 +16,6 @@ type Listener struct {
 	mock.Mock
 }
 
-// GetName provides a mock function with given fields:
-func (_m *Listener) GetName() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
-}
-
-// GetTitle provides a mock function with given fields:
-func (_m *Listener) GetTitle() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
-}
-
 // Listen provides a mock function with given fields: _a0, _a1
 func (_m *Listener) Listen(_a0 context.Context, _a1 func(context.Context, driver.Message) error) error {
 	ret := _m.Called(_a0, _a1)

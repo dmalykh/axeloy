@@ -35,7 +35,6 @@ func Connect(ctx context.Context, drivenName string, dsn string) (*reform.DB, er
 
 // DialectFor returns reform Dialect for given driver string, or nil.
 func DialectFor(driver string) reform.Dialect {
-	// for sqlite3_with_sleep
 	if strings.HasPrefix(driver, "sqlite3") {
 		return sqlite3.Dialect
 	}

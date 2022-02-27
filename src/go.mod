@@ -12,7 +12,6 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.2.5
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/lib/pq v1.10.2
 	github.com/nyaruka/phonenumbers v1.0.73
 	github.com/rakyll/statik v0.1.7 // indirect
 	github.com/samsarahq/go v0.0.0-20210308200756-be0e1e5b6582 // indirect

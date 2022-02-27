@@ -6,7 +6,7 @@ buildways:
 
 .PHONY: build
 build:
-	(make buildways && cd src && go mod tidy && go run src/main.go)
+	(make buildways && cd src && go mod tidy && go build main.go)
 
 mocks:
 	 (cd src && mockery --all --keeptree)

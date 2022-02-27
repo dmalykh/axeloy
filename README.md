@@ -1,4 +1,50 @@
+#UNDER DEVELOPMENT
+
+Axeloy is a tool that helps send a messages for your customers by a variety of communication channels.
+
+###Main concepts
+Subscribe source **profile** to send messages by destinations profiles by **ways**.
+Axeloy receives **message** by source **way**, determinate by source **profile** destination profiles. And sent message for destination profiles by ways.
+
+ - **message** contains:
+   - source — way received message
+   - payload of message, i.e. content
+   - destinations — ways to send payload, if doesn't set then Axeloy determinate automatically
+ - **profile**  
+
+
+Axeloy provides several key features:
+ - subscription by tag
+ - manage drivers in runtime  
+ - ways released as golang plugins
+ - destinations for messages determinates automatically
+
+
+clean architecture
+ 
+
+ - **ways** receives events and sends messages
+ - ****
+
+
+How to subscribe?
+
+
+### Ways
+Ways made as go plugins.
+
+helps send and control messages for customers by events.
+
+Axeloy provides several key features:
+
+
+
+
+
 Commandline interface description
+
+
+
 
 axeloy new [migration|driver] name
 axeloy run --config=[path]

@@ -26,8 +26,6 @@ type Message interface {
 	GetPayload() payload.Payload
 	GetStatus() model.Status
 	GetInfo() []string
-	//SetInfo(info ...string)
-	//AddInfo(info ...string)
 }
 
 type Messager interface {

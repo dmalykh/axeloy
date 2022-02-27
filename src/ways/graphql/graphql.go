@@ -11,6 +11,8 @@ import (
 	"github.com/samsarahq/thunder/graphql/introspection"
 	"github.com/samsarahq/thunder/graphql/schemabuilder"
 	"net/http"
+	"os"
+	"os/signal"
 )
 
 type Field struct {
@@ -30,34 +32,54 @@ type Destination struct {
 }
 
 type GraphQl struct {
-	Addr string
+	Addr   string
+	srv    http.Server
+	config config
 }
 
-func (g *GraphQl) ValidateProfile(ctx context.Context, p profile.Profile) (map[string]string, error) {
+type config struct {
+	graphqlPath  string
+	graphiqlPath string
+}
+
+func (g *GraphQl) ValidateProfile(ctx context.Context, p profile.Profile) error {
 	panic("implement me")
 }
 
 func (g *GraphQl) SetWayParams(params driver.Params) {
+	g.config.graphqlPath, _ = driver.GetValue(params, `graphqlPath`)
+	g.config.graphiqlPath, _ = driver.GetValue(params, `graphiqlPath`)
+}
+func (g *GraphQl) GetWayParamsFields() driver.ParamsFields {
+	return driver.ParamsFields{
+		{
+			Name: `graphqlPath`,
+		},
+		{
+			Name: `graphiqlPath`,
+		},
+	}
+}
+
+func (g *GraphQl) SetDriverConfig(config driver.DriverConfig) {
 	panic("implement me")
 }
 
-func (g *GraphQl) SetConfig(config driver.DriverConfig) {
-	panic("implement me")
-}
-
-func (g *GraphQl) Stop() error {
-	panic("implement me")
+func (g *GraphQl) Stop(ctx context.Context) error {
+	return g.srv.Shutdown(context.Background())
 }
 
 func (g *GraphQl) Listen(ctx context.Context, f func(ctx context.Context, message driver.Message) error) error {
 	var schema = g.buildSchema(ctx, f)
-
 	introspection.AddIntrospectionToSchema(schema)
 
 	// Expose schema and graphiql.
-	http.Handle("/graphql", graphql.Handler(schema))
-	http.Handle("/graphiql/", http.StripPrefix("/graphiql/", graphiql.Handler()))
-	return http.ListenAndServe(g.Addr, nil)
+	g.srv.Handler
+	srv.Handle(g.config.graphqlPath, graphql.Handler(schema))
+	if g.config.graphiqlPath != `` {
+		http.Handle(g.config.graphiqlPath, http.StripPrefix(g.config.graphiqlPath, graphiql.Handler()))
+	}
+	return g.srv.ListenAndServe()
 }
 
 func (g *GraphQl) buildSchema(ctx context.Context, f func(ctx context.Context, message driver.Message) error) *graphql.Schema {
@@ -114,3 +136,5 @@ func (g *GraphQl) buildSchema(ctx context.Context, f func(ctx context.Context, m
 	})
 	return schema.MustBuild()
 }
+
+var Driver GraphQl
