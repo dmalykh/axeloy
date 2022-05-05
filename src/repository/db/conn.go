@@ -6,6 +6,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/xo/dburl"
 	"gopkg.in/reform.v1"
 	"gopkg.in/reform.v1/dialects/mysql"
 	"gopkg.in/reform.v1/dialects/postgresql"
@@ -16,37 +17,47 @@ import (
 	"strings"
 )
 
-func Connect(ctx context.Context, drivenName string, dsn string) (*reform.DB, error) {
-	sqlDB, err := sql.Open(drivenName, dsn)
+// Connect to database with driver and dsn
+func Connect(ctx context.Context, drivenName string, dsn string) (*sql.DB, error) {
+	u, err := dburl.Parse(dsn)
+	if err != nil {
+		return nil, fmt.Errorf(`wrong dsn %w`, err)
+	}
+
+	db, err := sql.Open(drivenName, u.DSN)
 	if err != nil {
 		return nil, fmt.Errorf(`(sql open "%s") %w`, drivenName, err)
 	}
+	//Shutdown database connection
 	go func() {
 		<-ctx.Done()
-		sqlDB.Close()
+		db.Close()
 	}()
+	return db, nil
+}
 
+//
+func Reform(driverName string, db *sql.DB) *reform.DB {
 	// Use new *log.Logger for logging.
 	logger := log.New(os.Stderr, "SQL: ", log.Flags())
-
-	return reform.NewDB(sqlDB, DialectFor(drivenName), reform.NewPrintfLogger(logger.Printf)), nil
+	return reform.NewDB(db, DialectFor(driverName), reform.NewPrintfLogger(logger.Printf))
 
 }
 
 // DialectFor returns reform Dialect for given driver string, or nil.
-func DialectFor(driver string) reform.Dialect {
-	if strings.HasPrefix(driver, "sqlite3") {
+func DialectFor(driverName string) reform.Dialect {
+	if strings.HasPrefix(driverName, "sqlite3") {
 		return sqlite3.Dialect
 	}
 
-	switch driver {
-	case "postgres", "pgx":
+	switch driverName {
+	case "postgres":
 		return postgresql.Dialect
 	case "mysql":
 		return mysql.Dialect
 	case "sqlserver":
 		return sqlserver.Dialect
 	default:
-		return nil
+		panic(fmt.Sprintf(`Driver "%s" doesn't supported`, driverName))
 	}
 }

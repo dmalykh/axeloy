@@ -1,7 +1,20 @@
 package main
 
-import "github.com/dmalykh/axeloy/cmd"
+import (
+	"context"
+	"github.com/dmalykh/axeloy/cmd"
+	"github.com/dmalykh/axeloy/cmd/app"
+	"github.com/dmalykh/axeloy/cmd/atlas"
+	"log"
+)
 
 func main() {
-	cmd.Root()
+	var ctx = context.Background()
+	var cli = cmd.NewCmd()
+	cli.Add(app.Command(ctx))
+	cli.Add(atlas.Command(ctx))
+
+	if err := cli.Run(ctx); err != nil {
+		log.Fatal(err)
+	}
 }

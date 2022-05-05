@@ -26,27 +26,37 @@ var (
 	ErrLoadDrivers  = errors.New(`can't load ways driver`)
 )
 
+func NewApp() *App {
+	return &App{}
+}
+
 type App struct {
 }
 
-func (a *App) Load(ctx context.Context, configPath string) (*axeloy.Axeloy, error) {
+func (a *App) Open(configPath string) (*configuration.Config, error) {
 	//Parse config
 	config, err := configuration.Load(configPath)
 	if err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrParseConfig, err.Error())
 	}
+	return config, nil
+}
 
+// Load application creates repositories and run ways
+func (a *App) Load(ctx context.Context, config *configuration.Config) (*axeloy.Axeloy, error) {
 	//Connect to database
 	conn, err := db.Connect(ctx, config.Db.Driver, config.Db.Dsn)
 	if err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrDbConnection, err.Error())
 	}
 
+	var reform = db.Reform(config.Db.Driver, conn)
+
 	//Create repositories
-	var wayRepository = wayrepo.NewWayRepository(conn)
-	var routeRepository = routerrepo.NewRouteRepository(conn)
-	var trackRepository = routerrepo.NewTrackRepository(conn)
-	var messageRepository = message.NewMessageRepository(conn)
+	var wayRepository = wayrepo.NewWayRepository(reform)
+	var routeRepository = routerrepo.NewRouteRepository(reform)
+	var trackRepository = routerrepo.NewTrackRepository(reform)
+	var messageRepository = message.NewMessageRepository(reform)
 
 	//Load way's drivers
 	wayService, err := wayservice.NewService(ctx, &way.Config{
@@ -80,11 +90,11 @@ func (a *App) Load(ctx context.Context, configPath string) (*axeloy.Axeloy, erro
 }
 
 //Graceful shutdown https://play.golang.org/p/uBMCywO5O0w
-func (a *App) NewContext() context.Context {
+func (a *App) WithShutdown(ctx context.Context) context.Context {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		oscall := <-c
 		log.Printf("system call:%+v", oscall)

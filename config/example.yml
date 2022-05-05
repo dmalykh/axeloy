@@ -1,0 +1,49 @@
+#
+database:
+  driver: "pgx"
+  dsn: "postgre://name@pass:serv"
+# Set ways
+ways:
+  drivers:
+    smsru:
+      path: "ways/smsru/smsru.so"
+      host: ""
+      username: ""
+      password: ""
+    graphql:
+      path: "ways/graphql/graphql.so"
+    kafka:
+      path: "ways/graphql/graphql.so"
+    mail:
+      path: "ways/smsru/smsru.so"
+      smtp_host: ""
+      smtp_username: ""
+      smtp_password: ""
+      imap_host: ""
+      imap_username: ""
+      imap_password: ""
+      
+  listeners:
+    graphql:
+      driver: graphql
+      port: 9342
+    hookahevents:
+      driver: kafka
+      topik: myhoooka
+      group: dozen
+  senders:
+    myawesomesms:
+      driver: smsru
+    welcomemail:
+      driver: mail
+      subject: >
+        Добро пожаловать на хуку
+      body: >
+        Спасибо!
+    newhookanincity:
+      driver: mail
+      subject: >
+        Новая кальянка в городе
+      body: >
+        Открылась!
+
