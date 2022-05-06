@@ -1,25 +1,29 @@
 package config
 
 import (
-	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsimple"
 )
 
+type dbconfig struct {
+	Driver string `hcl:"driver,label"`
+	Dsn    string `hcl:"dsn"`
+}
+
+type DriverConfig struct {
+	Name   string   `hcl:"name,label"`
+	Path   string   `hcl:"path,label"`
+	Config hcl.Body `hcl:",remain"`
+}
+
 type Config struct {
-	Db struct {
-		Driver string `yaml:"driver"`
-		Dsn    string `yaml:"dsn"`
-	} `yaml:"database"`
-	Ways struct {
-		Drivers map[string]struct {
-			DriverPath   string      `yaml:"path"`
-			DriverConfig interface{} `yaml:"config"`
-		} `yaml:"drivers"`
-	} `yaml:"ways"`
+	Database dbconfig       `hcl:"database,block"`
+	Drivers  []DriverConfig `hcl:"driver,block"`
 }
 
 func Load(path string) (*Config, error) {
 	var c Config
-	if err := cleanenv.ReadConfig(path, &c); err != nil {
+	if err := hclsimple.DecodeFile(path, nil, &c); err != nil {
 		return nil, err
 	}
 	return &c, nil
