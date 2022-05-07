@@ -1,8 +1,8 @@
-#UNDER DEVELOPMENT
+# UNDER DEVELOPMENT
 
-Axeloy is a tool that helps send a messages for your customers by a variety of communication channels.
+Axeloy is a is a plugin driven tool that helps send a messages for your customers by a variety of communication channels.
 
-###Main concepts
+### Main concepts
 Subscribe source **profile** to send messages by destinations profiles by **ways**.
 Axeloy receives **message** by source **way**, determinate by source **profile** destination profiles. And sent message for destination profiles by ways.
 
@@ -18,6 +18,43 @@ Axeloy provides several key features:
  - manage drivers in runtime  
  - ways released as golang plugins
  - destinations for messages determinates automatically
+
+### How to make your own driver
+Sometimes you may need another way to send messages or interact with Axeloy. 
+Driver have to implement [driver.Driver](github.com/dmalykh/axeloy/axeloy/way/driver) interface. Axeloy use drivers as Go plugins.   
+
+#### How driver works?
+There is three additional interfaces for drivers: listener, sender and subscriber. 
+- Listeners used for receiving messages.
+- Senders
+- subscriber ?
+
+When Axeloy starts it loads all drivers specified in config. While driver loads method `Init(ctx context.Context, loader ConfigLoader) error` called with `type ConfigLoader func(v interface{}) error` function. If you specified any attributes in config of your plugin, you can get it just calling ConfigLoader func in Init method
+```hcl
+driver "superdemo" "ways/graphql/graphql.so" {
+  port = "998"
+}
+```
+  
+And get this config in plugin:
+```go
+
+type GraphQl struct {
+    config config
+}
+
+type config struct {
+    port string
+}
+
+func (q *GraphQl) Init(ctx context.Context, loader driver.ConfigLoader) error {
+	if err := loader(&q.config); err != nil {
+		return err
+	}
+	... do something ...
+	return nil
+}
+```
 
 
 clean architecture

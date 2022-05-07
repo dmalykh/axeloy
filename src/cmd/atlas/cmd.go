@@ -16,7 +16,7 @@ func Command(ctx context.Context) *cli.Command {
 				Name: `inspect`,
 				Action: func(c *cli.Context) error {
 					//Parse config
-					config, err := configuration.Load(c.String(`config`))
+					config, err := configuration.LoadFile(c.String(`config`))
 					if err != nil {
 						return cli.Exit(fmt.Sprintf(`open config error %s`, err.Error()), 8)
 					}

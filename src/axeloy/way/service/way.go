@@ -12,30 +12,27 @@ import (
 	"github.com/dmalykh/axeloy/axeloy/way/driver"
 	"github.com/dmalykh/axeloy/axeloy/way/model"
 	"github.com/dmalykh/axeloy/axeloy/way/repository"
-	"plugin"
 )
 
 type WayService struct {
 	wayRepository repository.WayRepository
+	driverService way.Driverer
 
-	drivers   driver.Drivers
 	listeners map[string]way.Listener
 }
 
-func NewService(ctx context.Context, config *way.Config) (*WayService, error) {
-	var service = &WayService{
-		wayRepository: config.WayRepository,
+func NewService(wayRepository repository.WayRepository, driverService way.Driverer) *WayService {
+	return &WayService{
+		wayRepository: wayRepository,
+		driverService: driverService,
 	}
-	return service, service.load(config)
 }
 
 var (
-	ErrNoWayName                       = errors.New(`name of way doesn't exists`)
-	ErrNoWayDriver                     = errors.New(`driver doesn't exists`)
-	ErrUnknownListener                 = errors.New(`can't receive listener`)
-	ErrStopListener                    = errors.New(`can't stop listener`)
-	ErrOpenPlugin                      = errors.New(`can't open plugin`)
-	ErrNotImplementAnyOfWaysInterfaces = errors.New(`doesn't implements any of ways interfaces`)
+	ErrNoWayName       = errors.New(`name of way doesn't exists`)
+	ErrNoWayDriver     = errors.New(`driver doesn't exists`)
+	ErrUnknownListener = errors.New(`can't receive listener`)
+	ErrStopListener    = errors.New(`can't stop listener`)
 )
 
 func (w *WayService) GetSenderByName(ctx context.Context, name string) (way.Sender, error) {
@@ -43,58 +40,11 @@ func (w *WayService) GetSenderByName(ctx context.Context, name string) (way.Send
 	if err != nil {
 		return nil, fmt.Errorf(`%s %w`, name, ErrNoWayName)
 	}
-	sender, err := w.drivers.GetSender(way.GetDriverName())
+	sender, err := w.driverService.GetSender(way.GetDriverName())
 	if err != nil {
 		return nil, fmt.Errorf(`%s %w`, way.GetDriverName(), ErrNoWayDriver)
 	}
 	return model.MakeSender(way, sender), nil
-}
-
-//func (w *WayService) GetSenderById(ctx context.Context, id uuid.UUID) (driver.Sender, error) { @TODO REMOVE
-//	way, err := w.wayRepository.GetById(ctx, id)
-//	if err != nil {
-//		return nil, fmt.Errorf(`%s %w`, id.String(), ErrNoWayName)
-//	}
-//	sender, err := w.drivers.GetSender(way.GetDriverName())
-//	if err != nil {
-//		return nil, fmt.Errorf(`%s %w`, way.GetDriverName(), ErrNoWayDriver)
-//	}
-//	return model.MakeSender(way, sender), nil
-//}
-
-// The function loads ways from configuration.
-func (w *WayService) load(config *way.Config) error {
-	for name, driverConfig := range config.Drivers {
-		plug, err := plugin.Open(driverConfig.Path)
-		if err != nil {
-			return fmt.Errorf(`%w "%s": %s`, ErrOpenPlugin, driverConfig.Path, err.Error())
-		}
-		d, err := plug.Lookup("Driver")
-		if err != nil {
-			return err //@TODO
-		}
-		//If driver is listener, register it
-		listener, canListen := d.(driver.Listener)
-		if canListen {
-			listener.SetDriverConfig(driverConfig.Config)
-			if err := w.drivers.RegistryListener(name, listener); err != nil {
-				return err //@TODO
-			}
-		}
-		//If driver is sender, register it
-		sender, canSend := d.(driver.Sender)
-		if canSend {
-			sender.SetDriverConfig(driverConfig.Config)
-			if err := w.drivers.RegistrySender(name, sender); err != nil {
-				return err //@TODO
-			}
-		}
-		//If driver isn't sender and isn't listener, what is it?!
-		if !canListen && !canSend {
-			return fmt.Errorf(`%s %w`, name, ErrNotImplementAnyOfWaysInterfaces)
-		}
-	}
-	return nil
 }
 
 // The GetAvailableListeners methos returns ways registered as Listener
@@ -107,7 +57,7 @@ func (w *WayService) GetAvailableListeners(ctx context.Context) ([]way.Listener,
 	}
 	for _, way := range ways {
 		//Get driver for way
-		listener, err := w.drivers.GetListener(way.GetDriverName())
+		listener, err := w.driverService.GetListener(way.GetDriverName())
 		if err != nil {
 			return listeners, err //@TODO
 		}

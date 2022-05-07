@@ -35,8 +35,7 @@ func TestAtlas_Inspect(t *testing.T) {
 }
 
 func TestAtlas_ApplyNew(t *testing.T) {
-	dir, _ := os.Getwd()
-	var dbpath = dir + "/sqlite-test-database.db"
+	var dbpath = t.TempDir() + "/sqlite-test-database.db"
 	var dsn = createdb(t, dbpath)
 	defer os.Remove(dbpath)
 
@@ -45,7 +44,7 @@ func TestAtlas_ApplyNew(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Create migration file
-	var migfile = dir + "/test-migration.hcl"
+	var migfile = t.TempDir() + "/test-migration.hcl"
 	defer os.Remove(migfile)
 	func() {
 		assert.NoError(t, os.WriteFile(migfile, []byte(

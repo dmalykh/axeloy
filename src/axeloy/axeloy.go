@@ -29,6 +29,7 @@ type Axeloy struct {
 	waysService    way.Wayer
 
 	senderChan chan router.Track
+	failedChan chan router.Track
 }
 
 type Config struct {
@@ -62,7 +63,7 @@ func (a *Axeloy) Run(ctx context.Context) error {
 }
 
 func (a *Axeloy) sendUnsent(ctx context.Context) error {
-	tracks, err := a.trackService.GetUnsentTracks(ctx)
+	tracks, err := a.trackService.GetUnsentTracks(ctx) //@TODO implement GetUnsentTracks
 	if err != nil {
 		return err
 	}
@@ -70,11 +71,13 @@ func (a *Axeloy) sendUnsent(ctx context.Context) error {
 	return nil
 }
 
+// Start to listen sender and send track
+// sender is a channel with tracks which consists of all information about message
 func (a *Axeloy) runSender(ctx context.Context, sender chan router.Track) {
 	go func(ctx context.Context, sender chan router.Track) {
 		for track := range sender {
 			if err := a.trackService.Send(ctx, track); err != nil {
-				//@TODO
+				//@TODO add track to error chan with delay
 			}
 		}
 	}(ctx, sender)

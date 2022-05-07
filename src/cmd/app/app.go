@@ -7,7 +7,6 @@ import (
 	"github.com/dmalykh/axeloy/axeloy"
 	messageservice "github.com/dmalykh/axeloy/axeloy/message/service"
 	"github.com/dmalykh/axeloy/axeloy/router"
-	"github.com/dmalykh/axeloy/axeloy/way"
 	"github.com/dmalykh/axeloy/axeloy/way/driver"
 	wayservice "github.com/dmalykh/axeloy/axeloy/way/service"
 	configuration "github.com/dmalykh/axeloy/config"
@@ -24,6 +23,7 @@ var (
 	ErrParseConfig  = errors.New(`can't parse config`)
 	ErrDbConnection = errors.New(`can't connect database`)
 	ErrLoadDrivers  = errors.New(`can't load ways driver`)
+	ErrOpenDrivers  = errors.New(`can't open ways driver`)
 )
 
 func NewApp() *App {
@@ -35,7 +35,7 @@ type App struct {
 
 func (a *App) Open(configPath string) (*configuration.Config, error) {
 	//Parse config
-	config, err := configuration.Load(configPath)
+	config, err := configuration.LoadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrParseConfig, err.Error())
 	}
@@ -45,38 +45,39 @@ func (a *App) Open(configPath string) (*configuration.Config, error) {
 // Load application creates repositories and run ways
 func (a *App) Load(ctx context.Context, config *configuration.Config) (*axeloy.Axeloy, error) {
 	//Connect to database
-	conn, err := db.Connect(ctx, config.Db.Driver, config.Db.Dsn)
+	conn, err := db.Connect(ctx, config.Database.Driver, config.Database.Dsn)
 	if err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrDbConnection, err.Error())
 	}
 
-	var reform = db.Reform(config.Db.Driver, conn)
+	var reform = db.Reform(config.Database.Driver, conn)
 
-	//Create repositories
+	// Create repositories
 	var wayRepository = wayrepo.NewWayRepository(reform)
 	var routeRepository = routerrepo.NewRouteRepository(reform)
 	var trackRepository = routerrepo.NewTrackRepository(reform)
 	var messageRepository = message.NewMessageRepository(reform)
 
-	//Load way's drivers
-	wayService, err := wayservice.NewService(ctx, &way.Config{
-		WayRepository: wayRepository,
-		Drivers: func(config *configuration.Config) map[string]driver.Config {
-			var drivers = make(map[string]driver.Config)
-			for name, d := range config.Ways.Drivers {
-				drivers[name] = driver.Config{
-					Path:   d.DriverPath, //@TODO use builtin drivers without path in config
-					Config: d.DriverConfig,
-				}
-			}
-			return drivers
-		}(config),
-	})
-	if err != nil {
+	// LoadFile way's drivers
+	driverService := wayservice.NewDriverService()
+	var drivers = make(map[string]driver.Driver, len(config.Drivers))
+	for _, driverConfig := range config.Drivers {
+		drv, err := driver.Open(ctx, driverConfig.Path, func(v interface{}) error {
+			return configuration.Unmarshal(driverConfig, v)
+		})
+		if err != nil {
+			return nil, fmt.Errorf(`%w %s`, ErrOpenDrivers, err.Error())
+		}
+		drivers[driverConfig.Name] = drv
+	}
+	if err := driverService.Load(drivers); err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrLoadDrivers, err.Error())
 	}
 
-	//Load services
+	// LoadFile ways
+	var wayService = wayservice.NewService(wayRepository, driverService)
+
+	//LoadFile services
 	var messageService = messageservice.NewMessager(messageRepository)
 	var routerService = router.NewRouter(routeRepository, wayService)
 	var trackService = router.NewTracker(trackRepository, wayService, messageService)

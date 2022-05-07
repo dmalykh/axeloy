@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/graphql-go/graphql v0.8.0 // indirect
-	github.com/ilyakaznacheev/cleanenv v1.2.5
+	github.com/hashicorp/hcl/v2 v2.10.0
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.10

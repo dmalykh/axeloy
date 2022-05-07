@@ -18,13 +18,20 @@ type ParamsField struct {
 
 type ParamsFields []ParamsField
 
-type DriverConfig interface{}
+// ConfigLoader using for load configs. For example:
+//	type Zero struct {
+//		ListenAddr string `hcl:"listen_addr"`
+//	}
+//	var k Zero
+//
+//	And unmarshal driver's config to k struct:
+//
+// 	err := loader(&k)
+type ConfigLoader func(v interface{}) error
 
-type Config struct {
-	Path   string
-	Config DriverConfig
-}
+//type Config config.DriverConfig //@TODO: SOLID
 
+// Driver used for work with Axeloy
 type Driver interface {
 	//The ValidateProfile method validates profile when route is created and before message been sent
 	ValidateProfile(ctx context.Context, p profile.Profile) error
@@ -32,8 +39,8 @@ type Driver interface {
 	SetWayParams(params Params)
 	// GetWayParamsFields returns fields that describes params of way
 	GetWayParamsFields() ParamsFields
-	// SetDriverConfig sets config for driver when app starts
-	SetDriverConfig(config DriverConfig)
+	// Init calls when Axeloy starts. Loader used for driver's config loading, see ConfigLoader
+	Init(ctx context.Context, loader ConfigLoader) error
 	Stop(ctx context.Context) error
 }
 
@@ -45,13 +52,4 @@ type Sender interface {
 type Listener interface {
 	Driver
 	Listen(context.Context, func(ctx context.Context, message Message) error) error
-}
-
-func UnmarshalParams(p Params, v interface{}) error {
-	//@TODO
-	return nil
-}
-
-func MakeMessage() {
-
 }
