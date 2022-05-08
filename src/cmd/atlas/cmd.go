@@ -21,7 +21,7 @@ func Command(ctx context.Context) *cli.Command {
 						return cli.Exit(fmt.Sprintf(`open config error %s`, err.Error()), 8)
 					}
 					// Init atlas
-					a, err := NewAtlas(ctx, config.Db.Driver, config.Db.Dsn)
+					a, err := NewAtlas(ctx, config.Database.Driver, config.Database.Dsn)
 					if err != nil {
 						return cli.Exit(fmt.Sprintf(`open create atlas %s`, err.Error()), 8)
 					}

@@ -6,15 +6,19 @@ import (
 	"github.com/dmalykh/axeloy/cmd/app"
 	"github.com/dmalykh/axeloy/cmd/atlas"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	var ctx = context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	var cli = cmd.NewCmd()
 	cli.Add(app.Command(ctx))
 	cli.Add(atlas.Command(ctx))
 
-	if err := cli.Run(ctx); err != nil {
+	if err := cli.Run(ctx, os.Args); err != nil {
+		cancel()
 		log.Fatal(err)
 	}
 }
