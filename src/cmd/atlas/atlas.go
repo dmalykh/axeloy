@@ -25,7 +25,7 @@ func NewAtlas(ctx context.Context, driverName string, dsn string) (*atlas, error
 	// Open with driver
 	driver, err := open(driverName, conn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`error to open driver %s: %w`, driverName, err)
 	}
 	// Get schema
 	s, err := action.SchemaNameFromURL(ctx, dsn)

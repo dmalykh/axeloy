@@ -7,6 +7,7 @@ import (
 	"github.com/dmalykh/axeloy/axeloy"
 	messageservice "github.com/dmalykh/axeloy/axeloy/message/service"
 	"github.com/dmalykh/axeloy/axeloy/router"
+	"github.com/dmalykh/axeloy/axeloy/way"
 	"github.com/dmalykh/axeloy/axeloy/way/driver"
 	wayservice "github.com/dmalykh/axeloy/axeloy/way/service"
 	configuration "github.com/dmalykh/axeloy/config"
@@ -42,7 +43,7 @@ func (a *App) Open(configPath string) (*configuration.Config, error) {
 	return config, nil
 }
 
-// Load application creates repositories and run ways
+// Load application creates repositories, drivers, ways and services, and returns new Axelooy instance
 func (a *App) Load(ctx context.Context, config *configuration.Config) (*axeloy.Axeloy, error) {
 	//Connect to database
 	conn, err := db.Connect(ctx, config.Database.Driver, config.Database.Dsn)
@@ -58,10 +59,33 @@ func (a *App) Load(ctx context.Context, config *configuration.Config) (*axeloy.A
 	var trackRepository = routerrepo.NewTrackRepository(reform)
 	var messageRepository = message.NewMessageRepository(reform)
 
-	// LoadFile way's drivers
+	// Load way's drivers
+	driverService, err := a.LoadDriverer(ctx, config.Drivers)
+	if err != nil {
+		return nil, fmt.Errorf(`load driverer error: %w`, err)
+	}
+
+	// Load ways
+	var wayService = wayservice.NewService(wayRepository, driverService)
+
+	//Load services
+	var messageService = messageservice.NewMessager(messageRepository)
+	var routerService = router.NewRouter(routeRepository, wayService)
+	var trackService = router.NewTracker(trackRepository, wayService, messageService)
+	var ax = axeloy.New(&axeloy.Config{
+		Router:   routerService,
+		Tracker:  trackService,
+		Messager: messageService,
+		Wayer:    wayService,
+	})
+	return ax, nil
+}
+
+// LoadDriverer load all drivers from config and returns way.Driverer service
+func (a *App) LoadDriverer(ctx context.Context, driversConfig []configuration.DriverConfig) (way.Driverer, error) {
 	driverService := wayservice.NewDriverService()
-	var drivers = make(map[string]driver.Driver, len(config.Drivers))
-	for _, driverConfig := range config.Drivers {
+	var drivers = make(map[string]driver.Driver, len(driversConfig))
+	for _, driverConfig := range driversConfig {
 		drv, err := driver.Open(ctx, driverConfig.Path, func(v interface{}) error {
 			return configuration.Unmarshal(driverConfig, v)
 		})
@@ -73,21 +97,7 @@ func (a *App) Load(ctx context.Context, config *configuration.Config) (*axeloy.A
 	if err := driverService.Load(drivers); err != nil {
 		return nil, fmt.Errorf(`%w %s`, ErrLoadDrivers, err.Error())
 	}
-
-	// LoadFile ways
-	var wayService = wayservice.NewService(wayRepository, driverService)
-
-	//LoadFile services
-	var messageService = messageservice.NewMessager(messageRepository)
-	var routerService = router.NewRouter(routeRepository, wayService)
-	var trackService = router.NewTracker(trackRepository, wayService, messageService)
-	var ax = axeloy.New(&axeloy.Config{
-		Router:   routerService,
-		Tracker:  trackService,
-		Messager: messageService,
-		Wayer:    wayService,
-	})
-	return ax, nil
+	return driverService, nil
 }
 
 //Graceful shutdown https://play.golang.org/p/uBMCywO5O0w

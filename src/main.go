@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGKILL, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	var cli = cmd.NewCmd()
 	cli.Add(app.Command(ctx))
 	cli.Add(atlas.Command(ctx))
